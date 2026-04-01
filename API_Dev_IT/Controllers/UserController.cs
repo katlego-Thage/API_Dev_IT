@@ -1,5 +1,7 @@
 ﻿using API_Dev_IT.Context;
+using API_Dev_IT.IService;
 using API_Dev_IT.Model;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,13 +16,16 @@ namespace API_Dev_IT.Controllers
     {
         private readonly BookingContext _context;
         private readonly ILogger<UserController> _logger;
-        public UserController(BookingContext context, ILogger<UserController> logger)
+        private readonly IUser _user;
+        public UserController(BookingContext context, ILogger<UserController> logger, 
+                              IUser user)
         {
             _context = context;
             _logger = logger;
+            _user = user;
         }
 
-        [HttpGet(Name = "GetUser")]
+        [HttpGet("GetUser")]
         public async Task<IActionResult> Get()
         {
             try
@@ -53,6 +58,21 @@ namespace API_Dev_IT.Controllers
             {
                 _logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
+            }
+        }
+
+        [HttpPost("UserLogIn")]
+        public async Task<IActionResult> LogIn(LogIn logIn)
+        {
+            try
+            {
+                var user = await _user.LogIn(logIn);
+                return Ok(user);
+            }
+            catch(Exception x)
+            {
+                _logger.LogError($"{x.Message}");
+                return Unauthorized(x.Message);
             }
         }
     }

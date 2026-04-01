@@ -1,4 +1,6 @@
 using API_Dev_IT.Context;
+using API_Dev_IT.IService;
+using API_Dev_IT.Service;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +14,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddDbContext<BookingContext>(option => option
                 .UseSqlServer(builder.Configuration
                 .GetConnectionString("Booking_Db")));
+
+builder.Services.AddScoped<IUser, UserService>();
 
 builder.Services.AddSwaggerGen();
 
