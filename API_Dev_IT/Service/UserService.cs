@@ -11,7 +11,8 @@ namespace API_Dev_IT.Service
         private readonly BookingContext _context;
         private readonly ILogger<UserService> _logger;
 
-        public UserService(BookingContext context, ILogger<UserService> logger)
+        public UserService(BookingContext context, 
+               ILogger<UserService> logger)
         {
             _context = context;
             _logger = logger;

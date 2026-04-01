@@ -17,12 +17,15 @@ namespace API_Dev_IT.Controllers
         private readonly BookingContext _context;
         private readonly ILogger<UserController> _logger;
         private readonly IUser _user;
-        public UserController(BookingContext context, ILogger<UserController> logger, 
-                              IUser user)
+        private readonly IJwt _jwt;
+        public UserController(BookingContext context, 
+               ILogger<UserController> logger, 
+               IUser user, IJwt jwt)
         {
             _context = context;
             _logger = logger;
             _user = user;
+            _jwt = jwt;
         }
 
         [HttpGet("GetUser")]
@@ -67,7 +70,9 @@ namespace API_Dev_IT.Controllers
             try
             {
                 var user = await _user.LogIn(logIn);
-                return Ok(user);
+                var token = await _jwt.GenerateToken(user);
+
+                return Ok(token);
             }
             catch(Exception x)
             {

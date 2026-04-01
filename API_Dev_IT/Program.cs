@@ -1,7 +1,10 @@
 using API_Dev_IT.Context;
 using API_Dev_IT.IService;
 using API_Dev_IT.Service;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +19,7 @@ builder.Services.AddDbContext<BookingContext>(option => option
                 .GetConnectionString("Booking_Db")));
 
 builder.Services.AddScoped<IUser, UserService>();
+builder.Services.AddScoped<IJwt, JwtService>();
 
 builder.Services.AddSwaggerGen();
 
