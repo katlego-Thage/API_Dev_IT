@@ -29,6 +29,7 @@ namespace API_Dev_IT.Controllers
         }
 
         [HttpGet("GetUser")]
+        [Authorize(Roles = "Manager, Receptionist, Admin")]
         public async Task<IActionResult> Get()
         {
             try
@@ -47,6 +48,7 @@ namespace API_Dev_IT.Controllers
         }
 
         [HttpGet("GetUser/{id}")]
+        [Authorize(Roles = "Manager, Receptionist, Admin")]
         public async Task<IActionResult> Get(int id)
         {
             try
@@ -79,6 +81,59 @@ namespace API_Dev_IT.Controllers
                 _logger.LogError($"{x.Message}");
                 return Unauthorized(x.Message);
             }
+        }
+
+        [HttpPost("CreateUser")]
+        [Authorize(Roles = "Admin , Customer")]
+        public async Task<IActionResult> Post(User users)
+        {
+            try
+            {
+                var insert = await _user.Create(users);
+
+                var token = await _jwt.GenerateToken(insert);
+
+                return Ok(token);
+
+            }
+            catch (InvalidOperationException x)
+            {
+                return BadRequest(x.Message);
+            }
+        }
+
+        [HttpPut("UpdateUser/{id}")]
+        [Authorize(Roles = "Admin , Customer")]
+        public async Task<IActionResult> Put(User users, int id)
+        {
+            try
+            {
+                var put = await _user.Update(users, id);
+
+                return Ok(put);
+
+            }
+            catch (InvalidOperationException x)
+            {
+                return BadRequest(x.Message);
+            }
+        }
+
+        [HttpDelete("RemoveUser/{id}")]
+
+        public async Task<IActionResult> Delete(int id)
+        {
+            try
+            {
+                var remove = await _user.Delete(id);
+
+                return Ok(remove);
+            }
+            catch (Exception x)
+            {
+                return BadRequest(x.Message);
+            }
+
         }
     }
 }
