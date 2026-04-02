@@ -22,6 +22,7 @@ builder.Services.AddDbContext<BookingContext>(option => option
 builder.Services.AddScoped<IUser, UserService>();
 builder.Services.AddScoped<IJwt, JwtService>();
 builder.Services.AddScoped<IRoom, RoomService>();
+builder.Services.AddScoped<ITenant, TenantService>();
 
 builder.Services.AddSwaggerGen(options =>
 {
