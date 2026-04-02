@@ -21,6 +21,7 @@ builder.Services.AddDbContext<BookingContext>(option => option
 
 builder.Services.AddScoped<IUser, UserService>();
 builder.Services.AddScoped<IJwt, JwtService>();
+builder.Services.AddScoped<IRoom, RoomService>();
 
 builder.Services.AddSwaggerGen(options =>
 {
@@ -68,6 +69,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
         };
 });
 
+builder.Services.AddCors(
+    option => option.AddPolicy("FrontEnd",
+    builder => builder.WithOrigins()
+                      .AllowCredentials()
+                      .WithMethods("DELETE", "PUT", "POST", "GET", "OPTIONS")
+                      .WithHeaders(
+                            "Content-Type",
+                            "Authorization",
+                            "X-Client-Data",
+                            "X-csrf-Token",
+                            "X-Requested-With",
+                            "Accept")));
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -75,7 +89,8 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(options =>
-        options.SwaggerEndpoint("/swagger/V1/swagger.json", $"swagger api - ({builder.Environment.EnvironmentName})"));
+        options.SwaggerEndpoint("/swagger/V1/swagger.json", $"swagger api - " +
+        $"({builder.Environment.EnvironmentName})"));
 }
 else
 {
@@ -86,7 +101,10 @@ else
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
+
 app.UseAuthorization();
+
+app.UseCors();
 
 app.MapControllers();
 

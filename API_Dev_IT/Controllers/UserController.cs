@@ -1,4 +1,5 @@
 ﻿using API_Dev_IT.Context;
+using API_Dev_IT.Helper;
 using API_Dev_IT.IService;
 using API_Dev_IT.Model;
 using Microsoft.AspNetCore.Authorization;
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace API_Dev_IT.Controllers
@@ -67,6 +69,7 @@ namespace API_Dev_IT.Controllers
         }
 
         [HttpPost("UserLogIn")]
+        [AllowAnonymous]
         public async Task<IActionResult> LogIn(LogIn logIn)
         {
             try
@@ -89,8 +92,12 @@ namespace API_Dev_IT.Controllers
         {
             try
             {
+                var userRole = UserRoleHelper.GetRole();
+                if (userRole is not "Admin" || userRole is not "Customer")
+                {
+                    return Unauthorized("Your not authorized");
+                }
                 var insert = await _user.Create(users);
-
                 var token = await _jwt.GenerateToken(insert);
 
                 return Ok(token);
@@ -98,6 +105,7 @@ namespace API_Dev_IT.Controllers
             }
             catch (InvalidOperationException x)
             {
+                _logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
@@ -108,29 +116,41 @@ namespace API_Dev_IT.Controllers
         {
             try
             {
-                var put = await _user.Update(users, id);
+                var userRole = UserRoleHelper.GetRole();
+                if (userRole is not "Admin" || userRole is not "Customer")
+                {
+                    return Unauthorized("Your not authorized");
+                }
+                var user = await _user.Update(users, id);
+                var token = await _jwt.GenerateToken(user);
 
-                return Ok(put);
+                return Ok(token);
 
             }
             catch (InvalidOperationException x)
             {
+                _logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
 
         [HttpDelete("RemoveUser/{id}")]
-
+        [Authorize(Roles = "Admin , Manager")]
         public async Task<IActionResult> Delete(int id)
         {
             try
             {
+                var userRole = UserRoleHelper.GetRole();
+                if (userRole is not "Admin" || userRole is not "Manager")
+                {
+                    return Unauthorized("Your not authorized");
+                }
                 var remove = await _user.Delete(id);
-
                 return Ok(remove);
             }
             catch (Exception x)
             {
+                _logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
 
