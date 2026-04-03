@@ -1,5 +1,7 @@
 using API_Dev_IT.Context;
+using API_Dev_IT.Helper;
 using API_Dev_IT.IService;
+using API_Dev_IT.Model;
 using API_Dev_IT.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +25,9 @@ builder.Services.AddScoped<IUser, UserService>();
 builder.Services.AddScoped<IJwt, JwtService>();
 builder.Services.AddScoped<IRoom, RoomService>();
 builder.Services.AddScoped<ITenant, TenantService>();
+builder.Services.AddScoped<IPayment, PaymentService>();
+builder.Services.AddScoped<IBooking, BookingService>();
+builder.Services.AddScoped<UserRoleHelper>();
 
 builder.Services.AddSwaggerGen(options =>
 {

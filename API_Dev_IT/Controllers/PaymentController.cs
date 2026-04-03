@@ -1,8 +1,8 @@
 ﻿using API_Dev_IT.Context;
-using API_Dev_IT.Helper;
 using API_Dev_IT.IService;
 using API_Dev_IT.Model;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,48 +10,30 @@ namespace API_Dev_IT.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class RoomController : ControllerBase
+    public class PaymentController : ControllerBase
     {
         private readonly BookingContext _context;
-        private readonly ILogger<UserController> _logger;
-        private readonly IRoom _room;
-        public RoomController(BookingContext context,
-               ILogger<UserController> logger,
-               IRoom room)
+        private readonly IPayment _payment;
+        private readonly ILogger<PaymentController> _logger;
+        public PaymentController(BookingContext context, 
+               IPayment payment,
+               ILogger<PaymentController> logger)
         {
             _context = context;
+            _payment = payment;
             _logger = logger;
-            _room = room;
         }
 
-        [HttpGet("GetRoom")]
-        [AllowAnonymous]
+        [HttpGet("GetPayment")]
+        [Authorize(Roles = "Manager, Admin, Receptionist")]
         public async Task<IActionResult> Get()
         {
             try
             {
-                var room = await _context.room
-                          .AsNoTracking()
-                          .ToListAsync();
-                return Ok(room);
-            }
-            catch(Exception x)
-            {
-                _logger.LogError($"{x.Message}");
-                return BadRequest(x.Message);
-            }          
-        }
-
-        [HttpGet("GetRoom/{id}")]
-        [AllowAnonymous]
-        public async Task<IActionResult> GetById(int id)
-        {            
-            try
-            {
-                var room = await _context.room
-                         .FirstOrDefaultAsync(x => 
-                         x.RoomID == id);
-                return Ok(room);
+                var pay = await _context.payment
+                        .AsNoTracking()
+                        .ToListAsync();
+                return Ok(pay);
             }
             catch (Exception x)
             {
@@ -60,15 +42,34 @@ namespace API_Dev_IT.Controllers
             }
         }
 
-        [HttpPost("Rom")]
-        [Authorize(Roles = "Admin , Manager")]
-
-        public async Task<IActionResult> Post(Room room)
+        [HttpGet("GetPayment/{id}")]
+        [Authorize(Roles = "Manager, Admin, Customer")]
+        public async Task<IActionResult> GetById(int id)
         {
             try
             {
-                var rooms = await _room.Create(room);
-                return Ok(rooms);
+                var pay = await _context.payment
+                         .FirstOrDefaultAsync(x =>
+                         x.PaymentID == id);
+                return Ok(pay);
+            }
+            catch (Exception x)
+            {
+                _logger.LogError($"{x.Message}");
+                return BadRequest(x.Message);
+            }
+        }
+
+        [HttpPost("Payment")]
+        [Authorize(Roles = "Customer")]
+        public async Task<IActionResult> Post(Payment pay)
+        {
+            try
+            {
+                var payment = await _payment.Create(pay);
+
+                return Ok(payment);
+
             }
             catch (InvalidOperationException x)
             {
@@ -77,14 +78,15 @@ namespace API_Dev_IT.Controllers
             }
         }
 
-        [HttpPut("Tenant/{id}")]
-        [Authorize(Roles = "Admin , Manager")]
-        public async Task<IActionResult> Put(Room room, int id)
+        [HttpPut("Payment/{id}")]
+        [Authorize(Roles = "Customer")]
+        public async Task<IActionResult> Put(Payment pay, int id)
         {
             try
             {
-                var rooms = await _room.Update(room, id);
-                return Ok(rooms);
+                var payment = await _payment.Update(pay, id);
+
+                return Ok(payment);
             }
             catch (InvalidOperationException x)
             {
@@ -92,15 +94,15 @@ namespace API_Dev_IT.Controllers
                 return BadRequest(x.Message);
             }
         }
-
+        // might have to remove this, a payment can be made or updated
         [HttpDelete("Delete/{id}")]
-        [Authorize(Roles = "Admin , Manager")]
         public async Task<IActionResult> Delete(int id)
         {
             try
             {
-                var rooms = await _room.Delete(id);
-                return Ok(rooms);
+                var payment = await _payment.Delete(id);
+
+                return Ok(payment);
 
             }
             catch (Exception x)

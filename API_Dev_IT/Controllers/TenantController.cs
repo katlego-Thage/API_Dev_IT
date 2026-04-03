@@ -67,11 +67,6 @@ namespace API_Dev_IT.Controllers
         {
             try
             {
-                var userRole = UserRoleHelper.GetRole();
-                if (userRole is not "Manager" || userRole is not "Admin")
-                {
-                    return Unauthorized("Your not authorized add rooms");
-                }
                 var tenant = await _tenant.Create(ten);
                 return Ok(tenant);
             }
@@ -88,11 +83,6 @@ namespace API_Dev_IT.Controllers
         {
             try
             {
-                var userRole = UserRoleHelper.GetRole();
-                if (userRole is not "Manager" || userRole is not "Admin")
-                {
-                    return Unauthorized("Your not authorized add rooms");
-                }
                 var tenant = await _tenant.Update(ten, id);
                 return Ok(tenant);
             }
@@ -109,11 +99,6 @@ namespace API_Dev_IT.Controllers
         {
             try
             {
-                var userRole = UserRoleHelper.GetRole();
-                if (userRole is not "Manager" || userRole is not "Admin")
-                {
-                    return Unauthorized("Your not authorized add rooms");
-                }
                 var tenant = await _tenant.Delete(id);
                 return Ok(tenant);
             }

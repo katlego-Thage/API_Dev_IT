@@ -92,11 +92,6 @@ namespace API_Dev_IT.Controllers
         {
             try
             {
-                var userRole = UserRoleHelper.GetRole();
-                if (userRole is not "Admin" || userRole is not "Customer")
-                {
-                    return Unauthorized("Your not authorized");
-                }
                 var insert = await _user.Create(users);
                 var token = await _jwt.GenerateToken(insert);
 
@@ -116,11 +111,6 @@ namespace API_Dev_IT.Controllers
         {
             try
             {
-                var userRole = UserRoleHelper.GetRole();
-                if (userRole is not "Admin" || userRole is not "Customer")
-                {
-                    return Unauthorized("Your not authorized");
-                }
                 var user = await _user.Update(users, id);
                 var token = await _jwt.GenerateToken(user);
 
@@ -140,11 +130,6 @@ namespace API_Dev_IT.Controllers
         {
             try
             {
-                var userRole = UserRoleHelper.GetRole();
-                if (userRole is not "Admin" || userRole is not "Manager")
-                {
-                    return Unauthorized("Your not authorized");
-                }
                 var remove = await _user.Delete(id);
                 return Ok(remove);
             }
