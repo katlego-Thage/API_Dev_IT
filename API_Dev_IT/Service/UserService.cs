@@ -112,7 +112,7 @@ namespace API_Dev_IT.Service
 
         public async Task<User> Delete(int id)
         {
-            var user = await _context.User
+            var user = await _context.User 
                        .FirstOrDefaultAsync(x => x.UserID == id);
 
             if (user?.UserID is null || user.UserID != id)

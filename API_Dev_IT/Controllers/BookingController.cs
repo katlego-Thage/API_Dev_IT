@@ -100,7 +100,6 @@ namespace API_Dev_IT.Controllers
                 if (userRole == "Customer" && booking.UserId != userId)
                 {
                     return Forbid();
-                    //return BadRequest(x.Message);
                 }
 
                 return Ok(booking);
@@ -144,30 +143,12 @@ namespace API_Dev_IT.Controllers
         }
 
         [HttpGet("GetBookingDetails/{id}")]
-        //[Authorize(Roles = "Manager, Receptionist, Admin, Customer")]
+        [Authorize(Roles = "Manager, Receptionist, Admin, Customer")]
         [AllowAnonymous]
         public async Task<IActionResult> GetBookingDetails(int id)
         {
             try
             {
-                //var userRole = User.FindFirst(System.Security.Claims
-                //               .ClaimTypes.Role)?.Value;
-
-                //var userId = int.Parse(User.FindFirst(System.Security
-                //                   .Claims.ClaimTypes.NameIdentifier)?
-                //                   .Value ?? "0");
-
-                //if (userRole != "Manager" || userRole != "Admin" ||
-                //    userRole != "Customer" || userRole != "Receptionist")
-                //{
-                //    return Unauthorized("Your not authorized to view a booking");
-                //}
-
-                //if (userId != id)
-                //{
-                //    return Unauthorized("Your not authorized add rooms");
-                //}
-
                 var bookingDetails = await _helper.BookingDetails(id);
 
                 if (bookingDetails is null)
@@ -254,30 +235,19 @@ namespace API_Dev_IT.Controllers
         {
             try
             {
-                //var userRole = User.FindFirst(System
-                //                   .Security
-                //                   .Claims
-                //                   .ClaimTypes
-                //                   .Role)?
-                //                   .Value;
+                var userRole = User.FindFirst(System
+                                   .Security
+                                   .Claims
+                                   .ClaimTypes
+                                   .Role)?
+                                   .Value;
 
-                //var userId = int.Parse(User.FindFirst(System
-                //                   .Security
-                //                   .Claims
-                //                   .ClaimTypes
-                //                   .NameIdentifier)?
-                //                   .Value ?? "0");
-                //var userRole = UserRoleHelper.GetRole();
-                //if (userRole is not "Manager" || userRole is not "Admin")
-                //{
-                //    return Unauthorized("Your not authorized to remove a booking");
-                //}
-
-                //var userId = UserRoleHelper.GetUserId();
-                //if (userId != id)
-                //{
-                //    return Unauthorized("Your not authorized add rooms");
-                //}
+                var userId = int.Parse(User.FindFirst(System
+                                   .Security
+                                   .Claims
+                                   .ClaimTypes
+                                   .NameIdentifier)?
+                                   .Value ?? "0");
 
                 var existingBooking = await _context.booking.FindAsync(id);
                 if (existingBooking == null)
@@ -285,15 +255,15 @@ namespace API_Dev_IT.Controllers
                     return NotFound("Booking not found");
                 }
 
-                //if (userRole == "Customer" && existingBooking.UserId != userId)
-                //{
-                //    return Forbid();
-                //}
+                if (userRole == "Customer" && existingBooking.UserId != userId)
+                {
+                    return Forbid();
+                }
 
-                //if (userRole == "Customer")
-                //{
-                //    booking.UserId = existingBooking.UserId;
-                //}
+                if (userRole == "Customer")
+                {
+                    booking.UserId = existingBooking.UserId;
+                }
 
                 var updatedBooking = await _booking.Update(booking, id);
 
@@ -346,30 +316,29 @@ namespace API_Dev_IT.Controllers
         {
             try
             {
-                //var userRole = User.FindFirst(System
-                //                   .Security
-                //                   .Claims
-                //                   .ClaimTypes
-                //                   .Role)?
-                //                   .Value;
+                var userRole = User.FindFirst(System
+                                   .Security
+                                   .Claims
+                                   .ClaimTypes
+                                   .Role)?
+                                   .Value;
 
-                //var userId = int.Parse(User.FindFirst(System
-                //                   .Security
-                //                   .Claims
-                //                   .ClaimTypes
-                //                   .NameIdentifier)?
-                //                   .Value ?? "0");
-                //var userRole = UserRoleHelper.GetRole();
-                //if (userRole is not "Manager" || userRole is not "Admin")
-                //{
-                //    return Unauthorized("Your not authorized to remove a booking");
-                //}
+                var userId = int.Parse(User.FindFirst(System
+                                   .Security
+                                   .Claims
+                                   .ClaimTypes
+                                   .NameIdentifier)?
+                                   .Value ?? "0");
 
-                //var userId = UserRoleHelper.GetUserId();
-                //if (userId != id)
-                //{
-                //    return Unauthorized("Your not authorized add rooms");
-                //}
+                if (userRole is not "Manager" || userRole is not "Admin")
+                {
+                    return Unauthorized("Your not authorized to remove a booking");
+                }
+
+                if (userId != id)
+                {
+                    return Unauthorized("Your not authorized add rooms");
+                }
 
                 var booking = await _context.booking.FindAsync(id);
 
@@ -378,15 +347,15 @@ namespace API_Dev_IT.Controllers
                     return NotFound("Booking not found");
                 }
 
-                //if (userRole == "Customer" && booking.UserId != userId)
-                //{
-                //    return Forbid();
-                //}
+                if (userRole == "Customer" && booking.UserId != userId)
+                {
+                    return Forbid();
+                }
 
-                //if (userRole == "Customer" && booking.Status != "Pending")
-                //{
-                //    return BadRequest("Cannot cancel booking that is already confirmed or checked in");
-                //}
+                if (userRole == "Customer" && booking.Status != "Pending")
+                {
+                    return BadRequest("Cannot cancel booking that is already confirmed or checked in");
+                }
 
                 var deletedBooking = await _booking.Delete(id);
 
