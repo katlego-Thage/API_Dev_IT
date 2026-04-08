@@ -77,7 +77,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 
 builder.Services.AddCors(
     option => option.AddPolicy("FrontEnd",
-    builder => builder.WithOrigins()
+    builder => builder.WithOrigins("http://localhost:4200")
                       .AllowCredentials()
                       .WithMethods("DELETE", "PUT", "POST", "GET", "OPTIONS")
                       .WithHeaders(
@@ -106,11 +106,11 @@ else
 
 app.UseHttpsRedirection();
 
+app.UseCors("FrontEnd");
+
 app.UseAuthentication();
 
 app.UseAuthorization();
-
-app.UseCors();
 
 app.MapControllers();
 
