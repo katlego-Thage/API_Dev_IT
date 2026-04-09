@@ -87,7 +87,7 @@ namespace API_Dev_IT.Controllers
         }
 
         [HttpPost("CreateUser")]
-        [Authorize(Roles = "Admin , Customer")]
+        [AllowAnonymous]
         public async Task<IActionResult> Post(User users)
         {
             try
