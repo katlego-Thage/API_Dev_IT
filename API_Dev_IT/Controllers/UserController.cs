@@ -31,7 +31,7 @@ namespace API_Dev_IT.Controllers
         }
 
         [HttpGet("GetUser")]
-        [Authorize(Roles = "Manager, Receptionist, Admin")]
+        //[Authorize(Roles = "Manager, Receptionist, Admin")]
         public async Task<IActionResult> Get()
         {
             try
@@ -41,8 +41,10 @@ namespace API_Dev_IT.Controllers
                                  .AsNoTracking()
                                  .ToListAsync();
                 return Ok(user);
+                //return new JsonResult(user);
+
             }
-            catch(Exception x)
+            catch (Exception x)
             {
                 _logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
@@ -50,7 +52,7 @@ namespace API_Dev_IT.Controllers
         }
 
         [HttpGet("GetUser/{id}")]
-        [Authorize(Roles = "Manager, Receptionist, Admin")]
+        //[Authorize(Roles = "Manager, Receptionist, Admin")]
         public async Task<IActionResult> Get(int id)
         {
             try
@@ -59,7 +61,8 @@ namespace API_Dev_IT.Controllers
                                  .User
                                  .FirstAsync
                                  (x => x.UserID == id);
-                return Ok(user);
+                //return Ok(user);
+                return new JsonResult(user);
             }
             catch(Exception x)
             {
@@ -70,14 +73,17 @@ namespace API_Dev_IT.Controllers
 
         [HttpPost("UserLogIn")]
         [AllowAnonymous]
+        //public async Task<T> Login <T>(LogIn logIn)
         public async Task<IActionResult> LogIn(LogIn logIn)
         {
             try
             {
-                var user = await _user.LogIn(logIn);
+                //var user = await _user.LogIn(logIn);
+                var user = await _user.LogIn<User>(logIn);
                 var token = await _jwt.GenerateToken(user);
 
                 return Ok(token);
+                //return (T)(object)token;
             }
             catch(Exception x)
             {
@@ -106,7 +112,7 @@ namespace API_Dev_IT.Controllers
         }
 
         [HttpPut("UpdateUser/{id}")]
-        [Authorize(Roles = "Admin , Customer")]
+        //[Authorize(Roles = "Admin , Customer")]
         public async Task<IActionResult> Put(User users, int id)
         {
             try
@@ -125,7 +131,7 @@ namespace API_Dev_IT.Controllers
         }
 
         [HttpDelete("RemoveUser/{id}")]
-        [Authorize(Roles = "Admin , Manager")]
+        //[Authorize(Roles = "Admin , Manager")]
         public async Task<IActionResult> Delete(int id)
         {
             try

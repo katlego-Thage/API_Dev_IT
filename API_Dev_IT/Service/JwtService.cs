@@ -26,7 +26,7 @@ namespace API_Dev_IT.Service
 
             var claim = new Claim[]
             {
-                new Claim(ClaimTypes.NameIdentifier,user?.Username??string.Empty),
+                new Claim(ClaimTypes.NameIdentifier,user.UserID.ToString()),
                 new Claim(ClaimTypes.Email,user?.Email??string.Empty),
                 new Claim(ClaimTypes.Role,role?.RoleName??string.Empty)
             };

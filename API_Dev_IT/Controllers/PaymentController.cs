@@ -25,7 +25,7 @@ namespace API_Dev_IT.Controllers
         }
 
         [HttpGet("GetPayment")]
-        [Authorize(Roles = "Manager, Admin, Receptionist")]
+        //[Authorize(Roles = "Manager, Admin, Receptionist")]
         public async Task<IActionResult> Get()
         {
             try
@@ -43,7 +43,7 @@ namespace API_Dev_IT.Controllers
         }
 
         [HttpGet("GetPayment/{id}")]
-        [Authorize(Roles = "Manager, Admin, Customer")]
+        //[Authorize(Roles = "Manager, Admin, Customer")]
         public async Task<IActionResult> GetById(int id)
         {
             try
@@ -61,7 +61,7 @@ namespace API_Dev_IT.Controllers
         }
 
         [HttpPost("Payment")]
-        [Authorize(Roles = "Customer")]
+        //[Authorize(Roles = "Customer")]
         public async Task<IActionResult> Post(Payment pay)
         {
             try
@@ -79,7 +79,7 @@ namespace API_Dev_IT.Controllers
         }
 
         [HttpPut("Payment/{id}")]
-        [Authorize(Roles = "Customer")]
+        //[Authorize(Roles = "Customer")]
         public async Task<IActionResult> Put(Payment pay, int id)
         {
             try

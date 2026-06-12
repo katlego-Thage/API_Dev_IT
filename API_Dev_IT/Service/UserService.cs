@@ -18,11 +18,12 @@ namespace API_Dev_IT.Service
             _context = context;
             _logger = logger;
         }
-        public async Task<User> LogIn(LogIn logIn)
+
+        public async Task<T> LogIn<T>(LogIn logIn)
         {
             var user = await _context.User
-                             .FirstAsync(x => 
-                             x.Email == logIn.email);
+                            .FirstAsync(x =>
+                            x.Email == logIn.email);
 
             if (user is null)
             {
@@ -35,7 +36,7 @@ namespace API_Dev_IT.Service
             var result = passwordHasher.VerifyHashedPassword(
                          user,
                          user.PasswordHash ?? string.Empty,
-                         logIn.password ??string.Empty);
+                         logIn.password ?? string.Empty);
 
             if (result == PasswordVerificationResult.Failed)
             {
@@ -44,8 +45,42 @@ namespace API_Dev_IT.Service
                 throw new UnauthorizedAccessException(
                           "Invalid credentials");
             }
-            return user;
+
+            if (typeof(T) == typeof(User))
+            {
+                return (T)(object)user;
+            }
+            throw new InvalidCastException($"Cannot convert User to " +
+                  $"{typeof(T).Name}");
         }
+        //public async Task<User> LogIn(LogIn logIn)
+        //{
+        //    var user = await _context.User
+        //                     .FirstAsync(x => 
+        //                     x.Email == logIn.email);
+
+        //    if (user is null)
+        //    {
+        //        _logger.LogError($"{user} Invalid User");
+        //        throw new UnauthorizedAccessException(
+        //                  "Invalid User");
+        //    }
+
+        //    var passwordHasher = new PasswordHasher<User>();
+        //    var result = passwordHasher.VerifyHashedPassword(
+        //                 user,
+        //                 user.PasswordHash ?? string.Empty,
+        //                 logIn.password ??string.Empty);
+
+        //    if (result == PasswordVerificationResult.Failed)
+        //    {
+        //        _logger.LogError($"{user.PasswordHash} " +
+        //                  $"Invalid credentials");
+        //        throw new UnauthorizedAccessException(
+        //                  "Invalid credentials");
+        //    }
+        //    return user;
+        //}
         public async Task<User> Create(User user)
         {
             var userAdd = await _context.User
