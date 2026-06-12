@@ -19,7 +19,7 @@ namespace API_Dev_IT.Service
             _logger = logger;
         }
 
-        public async Task<T> LogIn<T>(LogIn logIn)
+        public async Task<T> LogIn<T>(LogIn logIn) 
         {
             var user = await _context.User
                             .FirstAsync(x =>
