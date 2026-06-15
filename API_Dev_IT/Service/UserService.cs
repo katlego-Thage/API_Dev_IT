@@ -53,34 +53,7 @@ namespace API_Dev_IT.Service
             throw new InvalidCastException($"Cannot convert User to " +
                   $"{typeof(T).Name}");
         }
-        //public async Task<User> LogIn(LogIn logIn)
-        //{
-        //    var user = await _context.User
-        //                     .FirstAsync(x => 
-        //                     x.Email == logIn.email);
 
-        //    if (user is null)
-        //    {
-        //        _logger.LogError($"{user} Invalid User");
-        //        throw new UnauthorizedAccessException(
-        //                  "Invalid User");
-        //    }
-
-        //    var passwordHasher = new PasswordHasher<User>();
-        //    var result = passwordHasher.VerifyHashedPassword(
-        //                 user,
-        //                 user.PasswordHash ?? string.Empty,
-        //                 logIn.password ??string.Empty);
-
-        //    if (result == PasswordVerificationResult.Failed)
-        //    {
-        //        _logger.LogError($"{user.PasswordHash} " +
-        //                  $"Invalid credentials");
-        //        throw new UnauthorizedAccessException(
-        //                  "Invalid credentials");
-        //    }
-        //    return user;
-        //}
         public async Task<User> Create(User user)
         {
             var userAdd = await _context.User
