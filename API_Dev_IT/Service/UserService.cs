@@ -54,7 +54,7 @@ namespace API_Dev_IT.Service
                   $"{typeof(T).Name}");
         }
 
-        public async Task<User> Create(User user)
+        public async Task<T> Create<T>(User user)
         {
             var userAdd = await _context.User
                          .FirstOrDefaultAsync( 
@@ -93,7 +93,7 @@ namespace API_Dev_IT.Service
             await _context.SaveChangesAsync();
 
 
-            return insert;
+            return (T)(object)insert;
         }
 
         public async Task<User> Update(User users, int id)
