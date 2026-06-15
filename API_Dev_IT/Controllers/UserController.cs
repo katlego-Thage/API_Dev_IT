@@ -94,7 +94,7 @@ namespace API_Dev_IT.Controllers
         public async Task<IActionResult> Post(User users)
         {
             try
-            {
+            {  
                 var insert = await _user.Create<User>(users);
                 var token = await _jwt.GenerateToken(insert);
 
