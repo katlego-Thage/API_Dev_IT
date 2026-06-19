@@ -1,9 +1,3 @@
-# ASP.NET Core (.NET Framework)
-
-# Build and test ASP.NET Core projects targeting the full .NET Framework.
-# Add steps that publish symbols, save build artifacts, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
-
 trigger:
 - master
 
@@ -16,12 +10,24 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
+# 1. Install NuGet
 - task: NuGetToolInstaller@1
 
+# 2. SonarCloud Prepare (MUST be before build)
+- task: SonarCloudPrepare@4
+  inputs:
+    SonarQube: 'SonarCloudConnection'
+    organization: 'thagekdev'
+    scannerMode: 'MSBuild'           # Changed from 'dotnet' for .NET Framework
+    projectKey: 'Git-To-Devops'
+    projectName: 'mybooking'
+
+# 3. Restore packages
 - task: NuGetCommand@2
   inputs:
     restoreSolution: '$(solution)'
 
+# 4. Build (Sonar scanner wraps this to collect data)
 - task: VSBuild@1
   inputs:
     solution: '$(solution)'
@@ -29,28 +35,18 @@ steps:
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
 
+# 5. Run tests
 - task: VSTest@2
   inputs:
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
 
-- task: SonarCloudPrepare@4
-  inputs:
-    SonarQube: 'SonarCloudConnection'
-    organization: 'thagekdev'
-    scannerMode: 'dotnet'
-    projectKey: 'Git-To-Devops'
-    projectName: 'mybooking'
-
+# 6. SonarCloud Analyze (after build + tests)
 - task: SonarCloudAnalyze@4
   inputs:
     jdkversion: 'JAVA_HOME_17_X64'
 
+# 7. SonarCloud Publish
 - task: SonarCloudPublish@4
   inputs:
     pollingTimeoutSec: '300'
-    
-- task: DotNetCoreCLI@2
-  inputs:
-    command: 'build'
-    projects: '**/*.csproj'
