@@ -15,18 +15,18 @@ namespace API_Dev_IT.Controllers
     {
         private readonly BookingContext _context;
         private readonly IPayment _payment;
-        private readonly ILogger<PaymentController> _logger;
+        //private readonly ILogger<PaymentController> _logger;
         private readonly IBooking _booking;
         private readonly UserRoleHelper _helper;
         public BookingController(BookingContext context,
                IPayment payment,
-               ILogger<PaymentController> logger,
+               //ILogger<PaymentController> logger,
                IBooking booking,
                UserRoleHelper helper)
         {
             _context = context;
             _payment = payment;
-            _logger = logger;
+            //_logger = logger;
             _booking = booking;
             _helper = helper;
         }
@@ -69,7 +69,7 @@ namespace API_Dev_IT.Controllers
             }
             catch (Exception x)
             {
-                _logger.LogError($"{x.Message}");
+                //_logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
@@ -97,7 +97,7 @@ namespace API_Dev_IT.Controllers
                 var booking = await _context.booking
                                    .FirstAsync(x => x.BookingID == id);
 
-                if (userRole == "Customer" && booking.UserId != userId)
+                if (string.Equals(userRole, "Customer") && booking.UserId != userId)
                 {
                     return Forbid();
                 }
@@ -106,7 +106,7 @@ namespace API_Dev_IT.Controllers
             }
             catch (Exception x)
             {
-                _logger.LogError($"{x.Message}");
+                //_logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
@@ -137,7 +137,7 @@ namespace API_Dev_IT.Controllers
             }
             catch (Exception x)
             {
-                _logger.LogError($"{x.Message}");
+                //_logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
@@ -167,7 +167,7 @@ namespace API_Dev_IT.Controllers
             }
             catch (Exception x)
             {
-                _logger.LogError($"{x.Message}");
+                //_logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
@@ -178,36 +178,6 @@ namespace API_Dev_IT.Controllers
         {
             try
             {
-                //var userRole = User.FindFirst(System
-                //                   .Security
-                //                   .Claims
-                //                   .ClaimTypes
-                //                   .Role)?
-                //                   .Value;
-
-                //var userId = int.Parse(User.FindFirst(System
-                //                   .Security
-                //                   .Claims
-                //                   .ClaimTypes
-                //                   .NameIdentifier)?
-                //                   .Value ?? "0");
-                //var userRole = _booking.GetRole();
-                //if (userRole is not "Manager" || userRole is not "Admin")
-                //{
-                //    return Unauthorized("Your not authorized to remove a booking");
-                //}
-
-                //var userId = UserRoleHelper.GetUserId();
-                //if (userId != booking.UserId)
-                //{
-                //    return Unauthorized("Your not authorized add rooms");
-                //}
-
-                //if (userRole == "Customer")
-                //{
-                //    booking.UserId = userId;
-                //}
-
                 var room = await _context.room.FindAsync(booking.RoomID);
 
                 if (room == null || room.IsAvailable == false)
@@ -224,7 +194,7 @@ namespace API_Dev_IT.Controllers
             }
             catch (InvalidOperationException x)
             {
-                _logger.LogError($"{x.Message}");
+                //_logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
@@ -255,12 +225,12 @@ namespace API_Dev_IT.Controllers
                     return NotFound("Booking not found");
                 }
 
-                if (userRole == "Customer" && existingBooking.UserId != userId)
+                if (string.Equals(userRole,"Customer") && existingBooking.UserId != userId)
                 {
                     return Forbid();
                 }
 
-                if (userRole == "Customer")
+                if (string.Equals(userRole, "Customer"))
                 {
                     booking.UserId = existingBooking.UserId;
                 }
@@ -271,7 +241,7 @@ namespace API_Dev_IT.Controllers
             }
             catch (InvalidOperationException x)
             {
-                _logger.LogError($"{x.Message}");
+                //_logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
@@ -305,7 +275,7 @@ namespace API_Dev_IT.Controllers
             }
             catch (Exception x)
             {
-                _logger.LogError($"{x.Message}");
+                //_logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
@@ -347,12 +317,12 @@ namespace API_Dev_IT.Controllers
                     return NotFound("Booking not found");
                 }
 
-                if (userRole == "Customer" && booking.UserId != userId)
+                if (string.Equals(userRole, "Customer") && booking.UserId != userId)
                 {
                     return Forbid();
                 }
 
-                if (userRole == "Customer" && booking.Status != "Pending")
+                if (string.Equals(userRole, "Customer") && !string.Equals(booking.Status, "Pending"))
                 {
                     return BadRequest("Cannot cancel booking that is already confirmed or checked in");
                 }
@@ -371,7 +341,7 @@ namespace API_Dev_IT.Controllers
             }
             catch (Exception x)
             {
-                _logger.LogError($"{x.Message}");
+                //_logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
