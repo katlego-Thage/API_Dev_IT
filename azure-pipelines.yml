@@ -18,7 +18,7 @@ steps:
   inputs:
     SonarQube: 'SonarCloudConnection'
     organization: 'thagekdev'
-    scannerMode: 'MSBuild'           # Changed from 'dotnet' for .NET Framework
+    scannerMode: 'dotnet'           # Changed from 'dotnet' for .NET Framework
     projectKey: 'Git-To-Devops'
     projectName: 'mybooking'
 
