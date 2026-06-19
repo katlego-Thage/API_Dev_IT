@@ -47,3 +47,8 @@ steps:
 - task: SonarCloudAnalyze@4
   inputs:
     jdkversion: 'JAVA_HOME_17_X64'
+
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'build'
+    projects: '**/*.csproj'
