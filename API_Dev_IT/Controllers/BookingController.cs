@@ -17,15 +17,18 @@ namespace API_Dev_IT.Controllers
         private readonly IPayment _payment;
         private readonly IBooking _booking;
         private readonly UserRoleHelper _helper;
+        private readonly ILogger<BookingController> _logger;
         public BookingController(BookingContext context,
                IPayment payment, 
                IBooking booking,
-               UserRoleHelper helper)
+               UserRoleHelper helper,
+               ILogger<BookingController> logger)
         {
             _context = context;
             _payment = payment;
             _booking = booking;
             _helper = helper;
+            _logger = logger;
         }
 
         [HttpGet("GetBooking")]
@@ -61,11 +64,12 @@ namespace API_Dev_IT.Controllers
                 var allBookings = await _context.booking
                                     .AsNoTracking()
                                     .ToListAsync();
-
+                _logger.LogInformation($"All bookings retrieved successfully");
                 return Ok(allBookings);
             }
             catch (Exception x)
             {
+                _logger.LogError(x, $"Error occurred while retrieving bookings");
                 return BadRequest(x.Message);
             }
         }
@@ -97,11 +101,12 @@ namespace API_Dev_IT.Controllers
                 {
                     return Forbid();
                 }
-
+                _logger.LogInformation($"Booking {id} retrieved successfully");
                 return Ok(booking);
             }
             catch (Exception x)
             {
+                _logger.LogError(x, $"Error occurred while retrieving booking {id}");
                 return BadRequest(x.Message);
             }
         }
@@ -124,14 +129,13 @@ namespace API_Dev_IT.Controllers
                     query = query.Where(r => r.RoomID == roomType);
                 }
 
-                // What i need to do: Add date range conflict checking with existing bookings
-                // Note: This requires checking Booking table for overlapping dates
-
                 var availableRooms = await query.ToListAsync();
+                _logger.LogInformation($"Available rooms retrieved successfully");
                 return Ok(availableRooms);
             }
             catch (Exception x)
             {
+                _logger.LogError(x, $"Error occurred while retrieving available rooms");
                 return BadRequest(x.Message);
             }
         }
@@ -157,10 +161,12 @@ namespace API_Dev_IT.Controllers
                     return Forbid();
                 }
 
+                _logger.LogInformation($"Booking details for {id} retrieved successfully");
                 return Ok(bookingDetails);
             }
             catch (Exception x)
             {
+                _logger.LogError(x, $"Error occurred while retrieving booking details for {id}");
                 return BadRequest(x.Message);
             }
         }
@@ -183,10 +189,12 @@ namespace API_Dev_IT.Controllers
 
                 var createdBooking = await _booking.Create<Booking>(booking);
 
+                _logger.LogInformation($"Booking {createdBooking.BookingID} created successfully");
                 return Ok(createdBooking);
             }
             catch (InvalidOperationException x)
             {
+                _logger.LogError(x, $"Error occurred while creating booking");
                 return BadRequest(x.Message);
             }
         }
@@ -229,10 +237,12 @@ namespace API_Dev_IT.Controllers
 
                 var updatedBooking = await _booking.Update<Booking>(booking, id);
 
+                _logger.LogInformation($"Booking {id} updated successfully");
                 return Ok(updatedBooking);
             }
             catch (InvalidOperationException x)
             {
+                _logger.LogError(x, $"Error occurred while updating booking {id}");
                 return BadRequest(x.Message);
             }
         }
@@ -249,6 +259,7 @@ namespace API_Dev_IT.Controllers
 
                 if (!validStatuses.Contains(status))
                 {
+                    _logger.LogWarning($"Invalid status '{status}' provided for booking {id}");
                     return BadRequest($"Invalid status. Valid values: " +
                                       $"{string.Join(", ", validStatuses)}");
                 }
@@ -256,16 +267,19 @@ namespace API_Dev_IT.Controllers
                 var booking = await _context.booking.FindAsync(id);
                 if (booking == null)
                 {
+                    _logger.LogWarning($"Booking {id} not found for status update");
                     return NotFound("Booking not found");
                 }
 
                 booking.Status = status;
                 await _context.SaveChangesAsync();
 
+                _logger.LogInformation($"Booking {id} status updated to '{status}' successfully");
                 return Ok(booking);
             }
             catch (Exception x)
             {
+                _logger.LogError(x, $"Error occurred while updating status for booking {id}");
                 return BadRequest(x.Message);
             }
         }
@@ -326,11 +340,12 @@ namespace API_Dev_IT.Controllers
                     room.IsAvailable = true;
                     await _context.SaveChangesAsync();
                 }
-
+                _logger.LogInformation($"Booking {id} deleted successfully");
                 return Ok(deletedBooking);
             }
             catch (Exception x)
             {
+                _logger.LogError(x, $"Error occurred while deleting booking {id}");
                 return BadRequest(x.Message);
             }
         }
