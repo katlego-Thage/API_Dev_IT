@@ -15,12 +15,11 @@ namespace API_Dev_IT.Controllers
     {
         private readonly BookingContext _context;
         private readonly IPayment _payment;
-        //private readonly ILogger<PaymentController> _logger;
         private readonly IBooking _booking;
         private readonly UserRoleHelper _helper;
         public BookingController(BookingContext context,
                IPayment payment,
-               //ILogger<PaymentController> logger,
+               
                IBooking booking,
                UserRoleHelper helper)
         {
