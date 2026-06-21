@@ -14,14 +14,15 @@ namespace API_Dev_IT.Controllers
     {
         private readonly BookingContext _context;
         private readonly IPayment _payment;
-        private readonly ILogger<PaymentController> _logger;
-        public PaymentController(BookingContext context, 
-               IPayment payment,
-               ILogger<PaymentController> logger)
+        //private readonly ILogger<PaymentController> _logger; //fix
+        public PaymentController(BookingContext context,
+               IPayment payment
+               //ILogger<PaymentController> logger
+               )
         {
             _context = context;
             _payment = payment;
-            _logger = logger;
+            //_logger = logger;
         }
 
         [HttpGet("GetPayment")]
@@ -37,7 +38,7 @@ namespace API_Dev_IT.Controllers
             }
             catch (Exception x)
             {
-                _logger.LogError($"{x.Message}");
+                //_logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
@@ -55,7 +56,7 @@ namespace API_Dev_IT.Controllers
             }
             catch (Exception x)
             {
-                _logger.LogError($"{x.Message}");
+                //_logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
@@ -73,7 +74,7 @@ namespace API_Dev_IT.Controllers
             }
             catch (InvalidOperationException x)
             {
-                _logger.LogError($"{x.Message}");
+                //_logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
@@ -90,7 +91,7 @@ namespace API_Dev_IT.Controllers
             }
             catch (InvalidOperationException x)
             {
-                _logger.LogError($"{x.Message}");
+                //_logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
@@ -107,7 +108,7 @@ namespace API_Dev_IT.Controllers
             }
             catch (Exception x)
             {
-                _logger.LogError($"{x.Message}");
+                //_logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }

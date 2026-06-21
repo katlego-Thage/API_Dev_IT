@@ -29,11 +29,12 @@ builder.Services.AddScoped<IPayment, PaymentService>();
 builder.Services.AddScoped<IBooking, BookingService>();
 builder.Services.AddScoped<UserRoleHelper>();
 
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    options.SwaggerDoc("V1", new OpenApiInfo
+    options.SwaggerDoc("v1", new OpenApiInfo
     {
-        Version = "1",
+        Version = "v1",
         Title = "WebApi",
         Description = $"swagger api - ({builder.Environment.EnvironmentName})"
     });
@@ -81,7 +82,7 @@ builder.Services.AddCors(
                       .AllowCredentials()
                       .WithMethods("DELETE", "PUT", "POST", "GET", "OPTIONS")
                       .WithHeaders(
-                            "Content-Type",
+                            "Content-Type", 
                             "Authorization",
                             "X-Client-Data",
                             "X-csrf-Token",
@@ -90,12 +91,11 @@ builder.Services.AddCors(
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(options =>
-        options.SwaggerEndpoint("/swagger/V1/swagger.json", $"swagger api - " +
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", $"swagger api - " +
         $"({builder.Environment.EnvironmentName})"));
 }
 else
@@ -114,4 +114,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+await app.RunAsync();

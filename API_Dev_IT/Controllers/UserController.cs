@@ -73,17 +73,14 @@ namespace API_Dev_IT.Controllers
 
         [HttpPost("UserLogIn")]
         [AllowAnonymous]
-        //public async Task<T> Login <T>(LogIn logIn)
-        public async Task<IActionResult> LogIn(LogIn logIn)
+        public async Task<IActionResult> Login(LogIn logIn)
         {
             try
             {
-                //var user = await _user.LogIn(logIn);
                 var user = await _user.LogIn<User>(logIn);
                 var token = await _jwt.GenerateToken(user);
 
                 return Ok(token);
-                //return (T)(object)token;
             }
             catch(Exception x)
             {
@@ -97,8 +94,8 @@ namespace API_Dev_IT.Controllers
         public async Task<IActionResult> Post(User users)
         {
             try
-            {
-                var insert = await _user.Create(users);
+            {  
+                var insert = await _user.Create<User>(users);
                 var token = await _jwt.GenerateToken(insert);
 
                 return Ok(token);
