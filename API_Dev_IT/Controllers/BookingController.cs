@@ -18,20 +18,18 @@ namespace API_Dev_IT.Controllers
         private readonly IBooking _booking;
         private readonly UserRoleHelper _helper;
         public BookingController(BookingContext context,
-               IPayment payment,
-               
+               IPayment payment, 
                IBooking booking,
                UserRoleHelper helper)
         {
             _context = context;
             _payment = payment;
-            //_logger = logger;
             _booking = booking;
             _helper = helper;
         }
 
         [HttpGet("GetBooking")]
-        //[Authorize(Roles = "Manager, Receptionist, Admin, Customer")]
+        [Authorize(Roles = "Manager, Receptionist, Admin, Customer")]
         public async Task<IActionResult> Get()
         {
             try
@@ -68,13 +66,12 @@ namespace API_Dev_IT.Controllers
             }
             catch (Exception x)
             {
-                //_logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
 
         [HttpGet("GetBooking/{id}")]
-        //[Authorize(Roles = "Manager, Receptionist, Admin, Customer")]
+        [Authorize(Roles = "Manager, Receptionist, Admin, Customer")]
         public async Task<IActionResult> GetId(int id)
         {
             try
@@ -105,7 +102,6 @@ namespace API_Dev_IT.Controllers
             }
             catch (Exception x)
             {
-                //_logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
@@ -136,18 +132,17 @@ namespace API_Dev_IT.Controllers
             }
             catch (Exception x)
             {
-                //_logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
 
         [HttpGet("GetBookingDetails/{id}")]
-        //[Authorize(Roles = "Manager, Receptionist, Admin, Customer")]
+        [Authorize(Roles = "Manager, Receptionist, Admin, Customer")]
         [AllowAnonymous]
         public async Task<IActionResult> GetBookingDetails(int id)
         {
             try
-            {
+            { 
                 var bookingDetails = await _helper.BookingDetails(id);
 
                 if (bookingDetails is null)
@@ -166,13 +161,12 @@ namespace API_Dev_IT.Controllers
             }
             catch (Exception x)
             {
-                //_logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
 
         [HttpPost("CreateBooking")]
-        //[Authorize(Roles = "Customer, Receptionist, Manager, Admin")]
+        [Authorize(Roles = "Customer, Receptionist, Manager, Admin")]
         public async Task<IActionResult> CreateBooking([FromBody] Booking booking)
         {
             try
@@ -187,19 +181,18 @@ namespace API_Dev_IT.Controllers
                 booking.BookingDate = DateTime.Now;
                 booking.Status = "Pending";
 
-                var createdBooking = await _booking.Create(booking);
+                var createdBooking = await _booking.Create<Booking>(booking);
 
                 return Ok(createdBooking);
             }
             catch (InvalidOperationException x)
             {
-                //_logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
 
         [HttpPut("UpdateBooking/{id}")]
-        //[Authorize(Roles = "Customer, Receptionist, Manager, Admin")]
+        [Authorize(Roles = "Customer, Receptionist, Manager, Admin")]
         public async Task<IActionResult> UpdateBooking(int id, [FromBody] Booking booking)
         {
             try
@@ -234,19 +227,18 @@ namespace API_Dev_IT.Controllers
                     booking.UserId = existingBooking.UserId;
                 }
 
-                var updatedBooking = await _booking.Update(booking, id);
+                var updatedBooking = await _booking.Update<Booking>(booking, id);
 
                 return Ok(updatedBooking);
             }
             catch (InvalidOperationException x)
             {
-                //_logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
 
         [HttpPatch("UpdateStatus/{id}")]
-        //[Authorize(Roles = "Receptionist, Manager, Admin")]
+        [Authorize(Roles = "Receptionist, Manager, Admin")]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] string status)
         {
             try
@@ -274,13 +266,12 @@ namespace API_Dev_IT.Controllers
             }
             catch (Exception x)
             {
-                //_logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
 
         [HttpDelete("DeleteBooking/{id}")]
-        //[Authorize(Roles = "Customer, Manager, Admin")]
+        [Authorize(Roles = "Customer, Manager, Admin")]
         public async Task<IActionResult> DeleteBooking(int id)
         {
             try
@@ -326,7 +317,7 @@ namespace API_Dev_IT.Controllers
                     return BadRequest("Cannot cancel booking that is already confirmed or checked in");
                 }
 
-                var deletedBooking = await _booking.Delete(id);
+                var deletedBooking = await _booking.Delete<Booking>(id);
 
                 var room = await _context.room.FindAsync(booking.RoomID);
 
@@ -340,7 +331,6 @@ namespace API_Dev_IT.Controllers
             }
             catch (Exception x)
             {
-                //_logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }

@@ -4,8 +4,7 @@ namespace API_Dev_IT.IService
 {
     public interface IPayment
     {
-        Task<Payment> Create(Payment pay);
-        Task<Payment> Update(Payment pay, int id);
-        Task<Payment> Delete(int id);
+        Task<T> Create<T>(Payment pay);
+        Task<T> Update<T>(Payment pay, int id);
     }
 }

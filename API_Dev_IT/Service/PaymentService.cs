@@ -8,15 +8,14 @@ namespace API_Dev_IT.Service
     public class PaymentService : IPayment
     {
         private readonly BookingContext _context;
-        private readonly ILogger<TenantService> _logger;
-        public PaymentService(BookingContext context,
-               ILogger<TenantService> logger)
+        private readonly ILogger<PaymentService> _logger;
+        public PaymentService(BookingContext context, ILogger<PaymentService> logger)
         {
             _context = context;
             _logger = logger;
         }
 
-        public async Task<Payment> Create(Payment room)
+        public async Task<T> Create<T>(Payment room)
         {
             try
             {
@@ -26,6 +25,8 @@ namespace API_Dev_IT.Service
                 
                 if (rooms?.PaymentID == room.PaymentID)
                 {
+                    _logger.LogWarning($"Failed: payment for {room.BookingID}" +
+                                       $" already exists");
                     throw new InvalidOperationException(
                               "Payment already made");
                 }
@@ -41,17 +42,19 @@ namespace API_Dev_IT.Service
                 _context.payment.Add(insert);
                 await _context.SaveChangesAsync();
 
-                return insert;
+                _logger.LogInformation(
+                $"Tenant {insert.BookingID} created successfully");
+                return (T)(object)insert;
 
             }
-            catch (InvalidOperationException x)
+            catch (Exception ex)
             {
-                _logger.LogError(x.Message);
-                throw new Exception(x.Message);
+                _logger.LogError(ex, "An error occurred during tenant registration");
+                throw;
             }
         }
 
-        public async Task<Payment> Update(Payment room, int id)
+        public async Task<T> Update<T>(Payment room, int id)
         {
             try
             {
@@ -61,6 +64,8 @@ namespace API_Dev_IT.Service
 
                 if (rooms?.BookingID != room.BookingID)
                 {
+                    _logger.LogWarning($" email {room.BookingID}" +
+                                       $" doesnt exists");
                     throw new InvalidOperationException(
                               "Invalid Room");
                 }
@@ -73,38 +78,13 @@ namespace API_Dev_IT.Service
                 _context.Update(rooms);
                 await _context.SaveChangesAsync();
 
-                return rooms;
+                _logger.LogInformation($"Tenant {id} updated successfully");
+                return (T)(object)rooms;
             }
-            catch (InvalidOperationException x)
+            catch (Exception ex)
             {
-                _logger.LogError(x.Message);
-                throw new Exception(x.Message);
-            }
-        }
-
-        public async Task<Payment> Delete(int id)
-        {
-            try 
-            {
-                var room = await _context.payment
-                          .FirstOrDefaultAsync(x =>
-                          x.PaymentID == id);
-
-                if (room is null || room.PaymentID != id)
-                {
-                    throw new InvalidOperationException(
-                              "Room doesnt exist");
-                }
-
-                _context.payment.Remove(room);
-                await _context.SaveChangesAsync();
-
-                return room;
-            }
-            catch (InvalidOperationException x)
-            {
-                _logger.LogError(x.Message);
-                throw new Exception(x.Message);
+                _logger.LogError(ex, $"Tenant error occurred while updating {id}");
+                throw;
             }
         }
     }
