@@ -15,11 +15,13 @@ namespace API_Dev_IT.Controllers
     {
         private readonly BookingContext _context;
         private readonly ITenant _tenant;
+        private readonly ILogger<TenantController> _logger;
         public TenantController(BookingContext context,
-               ITenant tenant)
+               ITenant tenant, ILogger<TenantController> logger)
         {
             _context = context;
             _tenant = tenant;
+            _logger = logger;
         }
 
         [HttpGet("GetTenant")]
@@ -31,10 +33,12 @@ namespace API_Dev_IT.Controllers
                 var tenant = await _context.tenant
                             .AsNoTracking()
                             .ToListAsync();
+                _logger.LogInformation($"All tenants retrieved successfully");
                 return Ok(tenant);
             }
             catch (Exception x)
             {
+                _logger.LogError(x,$"Error occurred while retrieving all tenants");
                 return BadRequest(x.Message);
             }
         }
@@ -48,10 +52,13 @@ namespace API_Dev_IT.Controllers
                 var tenant = await _context.tenant
                             .FirstOrDefaultAsync(x => 
                             x.TenantID == id);
+
+                _logger.LogInformation($"Tenant {id} retrieved successfully");
                 return Ok(tenant);
             }
             catch (Exception x)
             {
+                _logger.LogError(x, $"Error occurred while retrieving tenant {id}");
                 return BadRequest(x.Message);
             }
         }
@@ -63,10 +70,12 @@ namespace API_Dev_IT.Controllers
             try
             {
                 var tenant = await _tenant.Create<Tenant>(ten);
+                _logger.LogInformation($"Tenant {tenant.TenantID} created successfully");
                 return Ok(tenant);
             }
             catch (InvalidOperationException x)
             {
+                _logger.LogError(x, $"Error occurred while creating tenant");
                 return BadRequest(x.Message);
             }
         }
@@ -78,10 +87,12 @@ namespace API_Dev_IT.Controllers
             try
             {
                 var tenant = await _tenant.Update<Tenant>(ten, id);
+                _logger.LogInformation($"Tenant {id} updated successfully");   
                 return Ok(tenant);
             }
             catch (InvalidOperationException x)
             {
+                _logger.LogError(x, $"Error occurred while updating tenant {id}");
                 return BadRequest(x.Message);
             }
         }
@@ -93,10 +104,12 @@ namespace API_Dev_IT.Controllers
             try
             {
                 var tenant = await _tenant.Delete<Tenant>(id);
+                _logger.LogInformation($"Tenant {id} deleted successfully");
                 return Ok(tenant);
             }
             catch (Exception x)
             {
+                _logger.LogError(x, $"Error occurred while deleting tenant {id}");
                 return BadRequest(x.Message);
             }
         }

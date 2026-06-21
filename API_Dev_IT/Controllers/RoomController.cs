@@ -14,11 +14,13 @@ namespace API_Dev_IT.Controllers
     {
         private readonly BookingContext _context;
         private readonly IRoom _room;
+        private readonly ILogger<RoomController> _logger;
         public RoomController(BookingContext context,
-               IRoom room)
+               IRoom room, ILogger<RoomController> logger)
         {
             _context = context;
             _room = room;
+            _logger = logger;
         }
 
         [HttpGet("GetRoom")]
@@ -30,10 +32,12 @@ namespace API_Dev_IT.Controllers
                 var room = await _context.room
                           .AsNoTracking()
                           .ToListAsync();
+                _logger.LogInformation($"All rooms retrieved successfully");
                 return Ok(room);
             }
             catch(Exception x)
             {
+                _logger.LogError(x, $"Error occurred while retrieving all rooms");
                 return BadRequest(x.Message);
             }          
         }
@@ -47,10 +51,12 @@ namespace API_Dev_IT.Controllers
                 var room = await _context.room
                          .FirstOrDefaultAsync(x => 
                          x.RoomID == id);
+                _logger.LogInformation($"Room {id} retrieved successfully");
                 return Ok(room);
             }
             catch (Exception x)
             {
+                _logger.LogError(x, $"Error occurred while retrieving room {id}");
                 return BadRequest(x.Message);
             }
         }
@@ -63,10 +69,12 @@ namespace API_Dev_IT.Controllers
             try
             {
                 var rooms = await _room.Create<Room>(room);
+                _logger.LogInformation($"Room created successfully with ID {rooms.RoomID}");
                 return Ok(rooms);
             }
             catch (InvalidOperationException x)
             {
+                _logger.LogError(x, $"Error occurred while creating room");
                 return BadRequest(x.Message);
             }
         }
@@ -78,10 +86,12 @@ namespace API_Dev_IT.Controllers
             try
             {
                 var rooms = await _room.Update<Room>(room, id);
+                _logger.LogInformation($"Room {id} updated successfully");
                 return Ok(rooms);
             }
             catch (InvalidOperationException x)
             {
+                _logger.LogError(x, $"Error occurred while updating room {id}");
                 return BadRequest(x.Message);
             }
         }
@@ -93,11 +103,13 @@ namespace API_Dev_IT.Controllers
             try
             {
                 var rooms = await _room.Delete<Room>(id);
+                _logger.LogInformation($"Room {id} deleted successfully");
                 return Ok(rooms);
 
             }
             catch (Exception x)
             {
+                _logger.LogError(x, $"Error occurred while deleting room {id}");
                 return BadRequest(x.Message);
             }
         }

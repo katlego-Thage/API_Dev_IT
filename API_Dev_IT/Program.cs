@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Serilog;
+using System.Reflection;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -60,21 +62,79 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(
-    options =>
+var jwtSecretKey = builder.Configuration["JWT:SecretKey"];
+var jwtIssuer = builder.Configuration["JWT:Issuer"];
+var jwtAudience = builder.Configuration["JWT:Audience"];
+
+if (string.IsNullOrWhiteSpace(jwtSecretKey))
+{
+    Log.Fatal("JWT:SecretKey is not configured");
+    throw new InvalidOperationException("JWT:SecretKey is not configured. " +
+                                        "Add it to appsettings.json or user secrets.");
+}
+
+if (Encoding.UTF8.GetBytes(jwtSecretKey).Length < 32)
+{
+    Log.Fatal("JWT:SecretKey must be at least 32 bytes (256 bits)");
+    throw new InvalidOperationException("JWT:SecretKey must be at least 32 bytes (256 bits)." +
+                                        "Generate a new key: openssl rand -base64 32");
+}
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateAudience = true,
-            ValidateIssuer = true,
             ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey)),
+            ValidateIssuer = true,
+            ValidIssuer = jwtIssuer ?? "API_Dev_IT",
+            ValidateAudience = true,
+            ValidAudience = jwtAudience ?? "BookingClient",
             ValidateLifetime = true,
-            ValidAudience = builder.Configuration["JWT:Audiance"]??string.Empty,
-            ValidIssuer = builder.Configuration["JWT:Issuer"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-                                    builder.Configuration["JWT:SecreteKey"]??string.Empty))
+            ClockSkew = TimeSpan.FromMinutes(5),
+            RequireExpirationTime = true,
+            RequireSignedTokens = true
         };
-});
+
+        options.Events = new JwtBearerEvents
+        {
+            OnAuthenticationFailed = context =>
+            {
+                Log.Warning(context.Exception,
+                    $"JWT authentication failed for request {context.Request.Path}");
+                return Task.CompletedTask;
+            },
+            OnTokenValidated = context =>
+            {
+                var userId = context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                Log.Debug($"JWT token validated for user {userId}");
+                return Task.CompletedTask;
+            },
+            OnChallenge = context =>
+            {
+                Log.Warning($"JWT challenge issued for {context.Request.Path} - {context.Error}");
+                return Task.CompletedTask;
+            }
+        };
+    });
+
+var projectRoot = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
+var contentRoot = builder.Environment.ContentRootPath;
+
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration as IConfiguration)
+    .WriteTo.File(
+        path: Path.Combine(contentRoot, "logs", "log-2026.txt"),
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 14)
+    .WriteTo.File(
+        path: Path.Combine(contentRoot, "logs", "errors-.txt"),
+        rollingInterval: RollingInterval.Day,
+        restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Error,
+        retainedFileCountLimit: 30)
+    .CreateLogger();
+
 
 builder.Services.AddCors(
     option => option.AddPolicy("FrontEnd",

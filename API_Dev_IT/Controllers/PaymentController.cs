@@ -14,11 +14,13 @@ namespace API_Dev_IT.Controllers
     {
         private readonly BookingContext _context;
         private readonly IPayment _payment;
+        private readonly ILogger<PaymentController> _logger;
         public PaymentController(BookingContext context,
-               IPayment payment)
+               IPayment payment, ILogger<PaymentController> logger)
         {
             _context = context;
             _payment = payment;
+            _logger = logger;
         }
 
         [HttpGet("GetPayment")]
@@ -30,10 +32,12 @@ namespace API_Dev_IT.Controllers
                 var pay = await _context.payment
                         .AsNoTracking()
                         .ToListAsync();
+                _logger.LogInformation($"All payments retrieved successfully");
                 return Ok(pay);
             }
             catch (Exception x)
             {
+                _logger.LogError(x, $"Error occurred while retrieving all payments");
                 return BadRequest(x.Message);
             }
         }
@@ -47,10 +51,12 @@ namespace API_Dev_IT.Controllers
                 var pay = await _context.payment
                          .FirstOrDefaultAsync(x =>
                          x.PaymentID == id);
+                _logger.LogInformation($"Payment {id} retrieved successfully");
                 return Ok(pay);
             }
             catch (Exception x)
             {
+                _logger.LogError(x, $"Error occurred while retrieving payment {id}");
                 return BadRequest(x.Message);
             }
         }
@@ -62,12 +68,13 @@ namespace API_Dev_IT.Controllers
             try
             {
                 var payment = await _payment.Create<Payment>(pay);
-
+                _logger.LogInformation($"Payment {payment.PaymentID} created successfully");
                 return Ok(payment);
 
             }
             catch (InvalidOperationException x)
             {
+                _logger.LogError(x, $"Error occurred while creating payment");
                 return BadRequest(x.Message);
             }
         }
@@ -79,11 +86,12 @@ namespace API_Dev_IT.Controllers
             try
             {
                 var payment = await _payment.Update<Payment>(pay, id);
-
+                _logger.LogInformation($"Payment {payment.PaymentID} updated successfully");
                 return Ok(payment);
             }
             catch (InvalidOperationException x)
             {
+                _logger.LogError(x, $"Error occurred while updating payment {id}");
                 return BadRequest(x.Message);
             }
         }
