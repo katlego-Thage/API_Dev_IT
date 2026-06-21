@@ -14,14 +14,11 @@ namespace API_Dev_IT.Controllers
     public class TenantController : ControllerBase
     {
         private readonly BookingContext _context;
-        private readonly ILogger<UserController> _logger;
         private readonly ITenant _tenant;
         public TenantController(BookingContext context,
-               ILogger<UserController> logger,
                ITenant tenant)
         {
             _context = context;
-            _logger = logger;
             _tenant = tenant;
         }
 
@@ -38,7 +35,6 @@ namespace API_Dev_IT.Controllers
             }
             catch (Exception x)
             {
-                _logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
@@ -56,7 +52,6 @@ namespace API_Dev_IT.Controllers
             }
             catch (Exception x)
             {
-                _logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
@@ -67,12 +62,11 @@ namespace API_Dev_IT.Controllers
         {
             try
             {
-                var tenant = await _tenant.Create(ten);
+                var tenant = await _tenant.Create<Tenant>(ten);
                 return Ok(tenant);
             }
             catch (InvalidOperationException x)
             {
-                _logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
@@ -83,12 +77,11 @@ namespace API_Dev_IT.Controllers
         {
             try
             {
-                var tenant = await _tenant.Update(ten, id);
+                var tenant = await _tenant.Update<Tenant>(ten, id);
                 return Ok(tenant);
             }
             catch (InvalidOperationException x)
             {
-                _logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
@@ -99,12 +92,11 @@ namespace API_Dev_IT.Controllers
         {
             try
             {
-                var tenant = await _tenant.Delete(id);
+                var tenant = await _tenant.Delete<Tenant>(id);
                 return Ok(tenant);
             }
             catch (Exception x)
             {
-                _logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }

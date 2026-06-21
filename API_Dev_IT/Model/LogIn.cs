@@ -4,9 +4,13 @@ namespace API_Dev_IT.Model
 {
     public class LogIn
     {
-        [EmailAddress]
-        public string? email { get; set; }
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email format")]
+        [StringLength(256)]
+        public string email { get; set; } = string.Empty;
 
-        public string? password { get; set; }
+        [Required(ErrorMessage = "Password is required")]
+        [StringLength(100, MinimumLength = 6)]
+        public string password { get; set; } = string.Empty;
     }
 }

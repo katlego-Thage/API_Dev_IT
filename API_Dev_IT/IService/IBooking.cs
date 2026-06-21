@@ -4,9 +4,9 @@ namespace API_Dev_IT.IService
 {
     public interface IBooking
     {
-        Task<Booking> Create(Booking booking);
-        Task<Booking> Update(Booking booking, int id);
-        Task<Booking> Delete(int id);
+        Task<T> Create<T>(Booking booking);
+        Task<T> Update<T>(Booking booking, int id);
+        Task<T> Delete<T>(int id);
         Task<bool> IsRoomAvailable(int roomId, DateTime checkIn, DateTime checkOut);
         Task<decimal> CalculateTotalPrice(int roomId, DateTime checkIn, DateTime checkOut);
     }

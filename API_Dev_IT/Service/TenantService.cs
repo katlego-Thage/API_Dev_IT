@@ -4,6 +4,7 @@ using API_Dev_IT.Model;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Win32;
 
 namespace API_Dev_IT.Service
 {
@@ -11,14 +12,13 @@ namespace API_Dev_IT.Service
     {
         private readonly BookingContext _context;
         private readonly ILogger<TenantService> _logger;
-        public TenantService(BookingContext context,
-               ILogger<TenantService> logger)
+        public TenantService(BookingContext context, ILogger<TenantService> logger)
         {
             _context = context;
             _logger = logger;
         }
 
-        public async Task<Tenant> Create(Tenant ten)
+        public async Task<T> Create<T>(Tenant ten)
         {
             try
             {
@@ -28,10 +28,9 @@ namespace API_Dev_IT.Service
 
                 if (tenant?.Email == ten.Email)
                 {
-                    _logger.LogError($"Tenant {tenant} " +
-                              $"already exist");
-                    throw new InvalidOperationException(
-                              "Tenant already exist");
+                    _logger.LogWarning($"Failed: email {ten.Email}" +
+                                       $" already exists");
+                    throw new InvalidOperationException("Tenant already exist");
                 }
 
                 var insert = new Tenant
@@ -45,17 +44,19 @@ namespace API_Dev_IT.Service
                 _context.tenant.Add(insert);
                 await _context.SaveChangesAsync();
 
-                return insert;
+                _logger.LogInformation(
+                $"Tenant {insert.TenantID} created successfully");
+                return (T)(object)insert;
 
             }
-            catch (InvalidOperationException x)
+            catch (Exception ex)
             {
-                _logger.LogError(x.Message);
-                throw new Exception(x.Message);
+                _logger.LogError(ex, "An error occurred during tenant registration");
+                throw;
             }
         }
 
-        public async Task<Tenant> Update(Tenant ten, int id)
+        public async Task<T> Update<T>(Tenant ten, int id)
         {
             try
             {
@@ -65,10 +66,16 @@ namespace API_Dev_IT.Service
 
                 if (tenant?.TenantID != ten.TenantID)
                 {
-                    _logger.LogError($"{tenant} " +
-                              $"Invalid exist");
+                    _logger.LogWarning($" email {ten.Email}" +
+                                       $" doesnt exists");
                     throw new InvalidOperationException(
                               "Invalid Tenant");
+                }
+
+                if (tenant == null)
+                {
+                    _logger.LogWarning($"Update failed: tenant {id} not found");
+                    throw new InvalidOperationException("Tenant not found");
                 }
 
                 tenant.FullName = ten.FullName;
@@ -79,16 +86,17 @@ namespace API_Dev_IT.Service
                 _context.Update(tenant);
                 await _context.SaveChangesAsync();
 
-                return tenant;
+                _logger.LogInformation($"Tenant {id} updated successfully");
+                return (T)(object)tenant;
             }
-            catch (InvalidOperationException x)
+            catch (Exception ex)
             {
-                _logger.LogError(x.Message);
-                throw new Exception(x.Message);
+                _logger.LogError(ex, $"Tenant error occurred while updating {id}");
+                throw;
             }
         }
 
-        public async Task<Tenant> Delete(int id)
+        public async Task<T> Delete<T>(int id)
         {
             try
             {
@@ -98,20 +106,20 @@ namespace API_Dev_IT.Service
 
                 if (tenant is null || tenant.TenantID != id)
                 {
-                    _logger.LogError($"{tenant} " +
-                                  $"Tenant doesnt exist");
+                    _logger.LogWarning($"delete failed: tenant {id} not found");
                     throw new InvalidOperationException(
                               "Tenant doesnt exist");
                 }
                 _context.tenant.Remove(tenant);
                 await _context.SaveChangesAsync();
 
-                return tenant;
+                _logger.LogInformation($"Tenant {id} deleted successfully");
+                return (T)(object)tenant;
             }
-            catch (InvalidOperationException x)
+            catch (Exception ex)
             {
-                _logger.LogError(x.Message);
-                throw new Exception(x.Message);
+                _logger.LogError(ex, $"Tenant error occurred while deleting {id}");
+                throw;
             }
         }
     }

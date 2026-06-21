@@ -2,6 +2,7 @@
 using API_Dev_IT.IService;
 using API_Dev_IT.Model;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 using System.Data;
 
 namespace API_Dev_IT.Service
@@ -10,13 +11,12 @@ namespace API_Dev_IT.Service
     {
         private readonly BookingContext _context;
         private readonly ILogger<RoomService> _logger;
-        public RoomService(BookingContext context,
-               ILogger<RoomService> logger)
+        public RoomService(BookingContext context, ILogger<RoomService> logger)
         {
             _context = context;
             _logger = logger;
         }
-        public async Task<Room> Create(Room room)
+        public async Task<T> Create<T>(Room room)
         {
             try
             {
@@ -26,7 +26,8 @@ namespace API_Dev_IT.Service
 
                 if (rooms?.RoomID == room.RoomID)
                 {
-                    _logger.LogError($"{room} already exist");
+                    _logger.LogWarning($"Failed: room {room.RoomID}" +
+                                      $" already exists");
                     throw new InvalidOperationException(
                               "Room already exist");
                 }
@@ -42,17 +43,19 @@ namespace API_Dev_IT.Service
                 _context.room.Add(insert);
                 await _context.SaveChangesAsync();
 
-                return insert;
+                _logger.LogInformation(
+                $"Tenant {insert.RoomID} created successfully");
+                return (T)(object)insert;
 
             }
-            catch (InvalidOperationException x)
+            catch (Exception ex)
             {
-                _logger.LogError(x.Message);
-                throw new Exception(x.Message);
+                _logger.LogError(ex, "An error occurred during room registration");
+                throw;
             }
         }
 
-        public async Task<Room> Update(Room room, int id)
+        public async Task<T> Update<T>(Room room, int id)
         {
             try
             {
@@ -62,7 +65,8 @@ namespace API_Dev_IT.Service
 
                 if (rooms?.RoomID != room.RoomID)
                 {
-                    _logger.LogError($"{room} Invalid Room");
+                    _logger.LogWarning($"Failed: room {room.RoomID}" +
+                                      $" already exists");
                     throw new InvalidOperationException(
                               "Invalid Room");
                 }
@@ -75,16 +79,18 @@ namespace API_Dev_IT.Service
                 _context.Update(rooms);
                 await _context.SaveChangesAsync();
 
-                return rooms;
+                _logger.LogInformation(
+                $"Tenant {id} updated successfully");
+                return (T)(object)rooms;
             }
-            catch (InvalidOperationException x)
+            catch (Exception ex)
             {
-                _logger.LogError(x.Message);
-                throw new Exception(x.Message);
+                _logger.LogError(ex, $"Room error occurred while updating {id}");
+                throw;
             }
         }
 
-        public async Task<Room> Delete(int id)
+        public async Task<T> Delete<T>(int id)
         {
             try
             {
@@ -94,7 +100,7 @@ namespace API_Dev_IT.Service
 
                 if (room is null || room.RoomID != id)
                 {
-                    _logger.LogError($"{room} Room doesnt exist");
+                    _logger.LogWarning($"delete failed: tenant {id} not found");
                     throw new InvalidOperationException(
                               "Room doesnt exist");
                 }
@@ -102,12 +108,13 @@ namespace API_Dev_IT.Service
                 _context.room.Remove(room);
                 await _context.SaveChangesAsync();
 
-                return room;
+                _logger.LogInformation($"room {id} deleted successfully");
+                return (T)(object)room;
             }
-            catch (InvalidOperationException x)
+            catch (Exception ex)
             {
-                _logger.LogError(x.Message);
-                throw new Exception(x.Message);
+                _logger.LogError(ex, $"Tenant error occurred while deleting {id}");
+                throw;
             }
         }
     }

@@ -4,8 +4,8 @@ namespace API_Dev_IT.IService
 {
     public interface ITenant
     {
-        Task<Tenant> Create(Tenant ten);
-        Task<Tenant> Update(Tenant ten, int id);
-        Task<Tenant> Delete(int id);
+        Task<T> Create<T>(Tenant ten);
+        Task<T> Update<T>(Tenant ten, int id);
+        Task<T> Delete<T>(int id);
     }
 }

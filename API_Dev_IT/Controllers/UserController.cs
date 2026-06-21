@@ -17,21 +17,18 @@ namespace API_Dev_IT.Controllers
     public class UserController : ControllerBase
     {
         private readonly BookingContext _context;
-        private readonly ILogger<UserController> _logger;
         private readonly IUser _user;
         private readonly IJwt _jwt;
         public UserController(BookingContext context, 
-               ILogger<UserController> logger, 
                IUser user, IJwt jwt)
         {
             _context = context;
-            _logger = logger;
             _user = user;
             _jwt = jwt;
         }
 
         [HttpGet("GetUser")]
-        //[Authorize(Roles = "Manager, Receptionist, Admin")]
+        [Authorize(Roles = "Manager, Receptionist, Admin")]
         public async Task<IActionResult> Get()
         {
             try
@@ -46,13 +43,12 @@ namespace API_Dev_IT.Controllers
             }
             catch (Exception x)
             {
-                _logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
 
         [HttpGet("GetUser/{id}")]
-        //[Authorize(Roles = "Manager, Receptionist, Admin")]
+        [Authorize]
         public async Task<IActionResult> Get(int id)
         {
             try
@@ -61,12 +57,10 @@ namespace API_Dev_IT.Controllers
                                  .User
                                  .FirstAsync
                                  (x => x.UserID == id);
-                //return Ok(user);
-                return new JsonResult(user);
+                return Ok(user);
             }
             catch(Exception x)
-            {
-                _logger.LogError($"{x.Message}");
+            {               
                 return BadRequest(x.Message);
             }
         }
@@ -84,7 +78,6 @@ namespace API_Dev_IT.Controllers
             }
             catch(Exception x)
             {
-                _logger.LogError($"{x.Message}");
                 return Unauthorized(x.Message);
             }
         }
@@ -103,18 +96,17 @@ namespace API_Dev_IT.Controllers
             }
             catch (InvalidOperationException x)
             {
-                _logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
 
         [HttpPut("UpdateUser/{id}")]
-        //[Authorize(Roles = "Admin , Customer")]
+        [Authorize(Roles = "Admin , Customer")]
         public async Task<IActionResult> Put(User users, int id)
         {
             try
             {
-                var user = await _user.Update(users, id);
+                var user = await _user.Update<User>(users, id);
                 var token = await _jwt.GenerateToken(user);
 
                 return Ok(token);
@@ -122,23 +114,21 @@ namespace API_Dev_IT.Controllers
             }
             catch (InvalidOperationException x)
             {
-                _logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
 
         [HttpDelete("RemoveUser/{id}")]
-        //[Authorize(Roles = "Admin , Manager")]
+        [Authorize(Roles = "Admin , Manager")]
         public async Task<IActionResult> Delete(int id)
         {
             try
             {
-                var remove = await _user.Delete(id);
+                var remove = await _user.Delete<User>(id);
                 return Ok(remove);
             }
             catch (Exception x)
             {
-                _logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
 

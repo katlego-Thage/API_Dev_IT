@@ -8,90 +8,125 @@ namespace API_Dev_IT.Service
     public class BookingService : IBooking
     {
         private readonly BookingContext _context;
-        private readonly ILogger<TenantService> _logger;
+        private readonly ILogger<BookingService> _logger;
         public BookingService(BookingContext context,
-               ILogger<TenantService> logger)
+               ILogger<BookingService> logger)
         {
             _context = context;
             _logger = logger;
         }
-        public async Task<Booking> Create(Booking booking)
+        public async Task<T> Create<T>(Booking booking)
         {
-            var tenantExists = await _context.tenant
-                              .AnyAsync(t => 
-                              t.TenantID == booking.TenantID);
-
-            if (!tenantExists)
+            try
             {
-                throw new InvalidOperationException("Tenant not found");
+                var tenantExists = await _context.tenant
+                  .AnyAsync(t =>
+                  t.TenantID == booking.TenantID);
+
+                if (!tenantExists)
+                {
+                    _logger.LogWarning($"Failed: room {booking.TenantID} not found");
+                    throw new InvalidOperationException("Tenant not found");
+                }
+
+                var room = await _context.room.FindAsync(booking.BookingID);
+
+                if (room is null)
+                {
+                    _logger.LogWarning($"Failed: room {booking.RoomID} not found");
+                    throw new InvalidOperationException("Room not found");
+                }
+
+                if (booking.CheckInDate >= booking.CheckOutDate)
+                {
+                    _logger.LogWarning($"Failed: invalid dates for booking {booking.BookingID}");
+                    throw new InvalidOperationException(
+                              "Check-out date must be after check-in date");
+                }
+
+                var hasConflict = await _context.booking
+                    .AnyAsync(b => b.RoomID == booking.RoomID
+                        && b.Status != "Cancelled"
+                        && b.CheckInDate < booking.CheckOutDate
+                        && b.CheckOutDate > booking.CheckInDate);
+
+                if (hasConflict)
+                {
+                    _logger.LogWarning($"Failed: room {booking.RoomID} is not available for selected dates");
+                    throw new InvalidOperationException(
+                              "Room is not available for selected dates");
+                }
+
+                _context.booking.Add(booking);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"Booking {booking.BookingID} created successfully");
+                return (T)(object)booking;
             }
-
-            var room = await _context.room.FindAsync(booking.BookingID);
-
-            if (room is null)
+            catch (Exception ex)
             {
-                throw new InvalidOperationException("Room not found");
+                _logger.LogError(ex, "Error creating booking");
+                throw;
             }
-
-            if (booking.CheckInDate >= booking.CheckOutDate)
-            {
-                throw new InvalidOperationException(
-                          "Check-out date must be after check-in date");
-            }
-
-            var hasConflict = await _context.booking
-                .AnyAsync(b => b.RoomID == booking.RoomID
-                    && b.Status != "Cancelled"
-                    && b.CheckInDate < booking.CheckOutDate
-                    && b.CheckOutDate > booking.CheckInDate);
-
-            if (hasConflict)
-            {
-                throw new InvalidOperationException(
-                          "Room is not available for selected dates");
-            }
-
-            _context.booking.Add(booking);
-            await _context.SaveChangesAsync();
-
-            return booking;
-        }
-        public async Task<Booking> Update(Booking booking, int id)
-        {
-            var existingBooking = await _context.booking.FindAsync(id);
-
-            if (existingBooking is null)
-            {
-                throw new InvalidOperationException("Booking not found");
-            }
-
-            existingBooking.TenantID = booking.TenantID;
-            existingBooking.RoomID = booking.RoomID;
-            existingBooking.CheckInDate = booking.CheckInDate;
-            existingBooking.CheckOutDate = booking.CheckOutDate;
-            existingBooking.Status = booking.Status?? existingBooking.Status;
-            existingBooking.UserId = booking.UserId;
-
-            await _context.SaveChangesAsync();
-
-            return existingBooking;
         }
 
-        public async Task<Booking> Delete(int id)
+        public async Task<T> Update<T>(Booking booking, int id)
         {
-            var booking = await _context.booking
-                         .FirstOrDefaultAsync(x => 
-                         x.RoomID == id);
-
-            if (booking is null)
+            try
             {
-                throw new InvalidOperationException("Booking not found");
+                var existingBooking = await _context.booking.FindAsync(id);
+
+                if (existingBooking is null)
+                {
+                    _logger.LogWarning($"Failed: booking {id} not found for update");
+                    throw new InvalidOperationException("Booking not found");
+                }
+
+                existingBooking.TenantID = booking.TenantID;
+                existingBooking.RoomID = booking.RoomID;
+                existingBooking.CheckInDate = booking.CheckInDate;
+                existingBooking.CheckOutDate = booking.CheckOutDate;
+                existingBooking.Status = booking.Status ?? existingBooking.Status;
+                existingBooking.UserId = booking.UserId;
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"Booking {id} updated successfully");
+                return (T)(object)existingBooking;
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error updating booking {id}");
+                throw;
+            }
+        }
 
-            _context.booking.Remove(booking);
-            await _context.SaveChangesAsync();
+        public async Task<T> Delete<T>(int id)
+        {
+            try
+            {
+                var booking = await _context.booking
+                             .FirstOrDefaultAsync(x =>
+                             x.RoomID == id);
 
-            return booking;
+                if (booking is null)
+                {
+                    _logger.LogWarning($"Failed: booking {id} not found for deletion");
+                    throw new InvalidOperationException("Booking not found");
+                }
+
+                _context.booking.Remove(booking);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"Booking {id} deleted successfully");
+
+                return (T)(object)booking;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error deleting booking {id}");
+                throw;
+            }
         }
 
         public async Task<bool> IsRoomAvailable(int roomId, 

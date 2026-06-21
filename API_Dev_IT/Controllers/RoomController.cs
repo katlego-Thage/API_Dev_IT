@@ -13,14 +13,11 @@ namespace API_Dev_IT.Controllers
     public class RoomController : ControllerBase
     {
         private readonly BookingContext _context;
-        private readonly ILogger<UserController> _logger;
         private readonly IRoom _room;
         public RoomController(BookingContext context,
-               ILogger<UserController> logger,
                IRoom room)
         {
             _context = context;
-            _logger = logger;
             _room = room;
         }
 
@@ -37,7 +34,6 @@ namespace API_Dev_IT.Controllers
             }
             catch(Exception x)
             {
-                _logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }          
         }
@@ -55,7 +51,6 @@ namespace API_Dev_IT.Controllers
             }
             catch (Exception x)
             {
-                _logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
@@ -67,12 +62,11 @@ namespace API_Dev_IT.Controllers
         {
             try
             {
-                var rooms = await _room.Create(room);
+                var rooms = await _room.Create<Room>(room);
                 return Ok(rooms);
             }
             catch (InvalidOperationException x)
             {
-                _logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
@@ -83,12 +77,11 @@ namespace API_Dev_IT.Controllers
         {
             try
             {
-                var rooms = await _room.Update(room, id);
+                var rooms = await _room.Update<Room>(room, id);
                 return Ok(rooms);
             }
             catch (InvalidOperationException x)
             {
-                _logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
@@ -99,13 +92,12 @@ namespace API_Dev_IT.Controllers
         {
             try
             {
-                var rooms = await _room.Delete(id);
+                var rooms = await _room.Delete<Room>(id);
                 return Ok(rooms);
 
             }
             catch (Exception x)
             {
-                _logger.LogError($"{x.Message}");
                 return BadRequest(x.Message);
             }
         }
