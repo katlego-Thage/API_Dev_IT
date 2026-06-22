@@ -32,7 +32,7 @@ namespace API_Dev_IT.Controllers
         }
 
         [HttpGet("GetBooking")]
-        [Authorize(Roles = "Manager, Receptionist, Admin, Customer")]
+        [Authorize]
         public async Task<IActionResult> Get()
         {
             try
@@ -75,7 +75,7 @@ namespace API_Dev_IT.Controllers
         }
 
         [HttpGet("GetBooking/{id}")]
-        [Authorize(Roles = "Manager, Receptionist, Admin, Customer")]
+        [Authorize]
         public async Task<IActionResult> GetId(int id)
         {
             try
@@ -141,8 +141,7 @@ namespace API_Dev_IT.Controllers
         }
 
         [HttpGet("GetBookingDetails/{id}")]
-        [Authorize(Roles = "Manager, Receptionist, Admin, Customer")]
-        [AllowAnonymous]
+        [Authorize]
         public async Task<IActionResult> GetBookingDetails(int id)
         {
             try
@@ -172,7 +171,6 @@ namespace API_Dev_IT.Controllers
         }
 
         [HttpPost("CreateBooking")]
-        [Authorize(Roles = "Customer, Receptionist, Manager, Admin")]
         public async Task<IActionResult> CreateBooking([FromBody] Booking booking)
         {
             try
@@ -200,7 +198,7 @@ namespace API_Dev_IT.Controllers
         }
 
         [HttpPut("UpdateBooking/{id}")]
-        [Authorize(Roles = "Customer, Receptionist, Manager, Admin")]
+        [Authorize]
         public async Task<IActionResult> UpdateBooking(int id, [FromBody] Booking booking)
         {
             try
@@ -248,7 +246,6 @@ namespace API_Dev_IT.Controllers
         }
 
         [HttpPatch("UpdateStatus/{id}")]
-        [Authorize(Roles = "Receptionist, Manager, Admin")]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] string status)
         {
             try
@@ -304,7 +301,7 @@ namespace API_Dev_IT.Controllers
                                    .NameIdentifier)?
                                    .Value ?? "0");
 
-                if (userRole is not "Manager" || userRole is not "Admin")
+                if (userRole is not "Manager" && userRole is not "Admin")
                 {
                     return Unauthorized("Your not authorized to remove a booking");
                 }
