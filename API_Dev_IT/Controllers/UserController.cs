@@ -31,7 +31,6 @@ namespace API_Dev_IT.Controllers
         }
 
         [HttpGet("GetUser")]
-        [Authorize(Roles = "Manager, Receptionist, Admin")]
         public async Task<IActionResult> Get()
         {
             try
