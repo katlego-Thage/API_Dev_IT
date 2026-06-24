@@ -1,8 +1,8 @@
 ﻿using API_Dev_IT.Context;
 using API_Dev_IT.IService;
 using API_Dev_IT.Model;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -13,95 +13,57 @@ namespace API_Dev_IT.Service
 {
     public class JwtService : IJwt
     {
-        //private readonly IConfiguration _configuration;
-        //private readonly BookingContext _context;
-        //public JwtService(IConfiguration configuration, BookingContext context)
-        //{
-        //    _configuration = configuration;
-        //    _context = context;
-        //}
-        //public async Task<IActionResult> GenerateToken(User user)
-        //{
-        //    var role = await _context.role
-        //               .FirstOrDefaultAsync(x => x.RoleID == user.RoleID);
-
-        //    var claim = new Claim[]
-        //    {
-        //        new Claim(ClaimTypes.NameIdentifier,user.UserID.ToString()),
-        //        new Claim(ClaimTypes.Email,user?.Email??string.Empty),
-        //        new Claim(ClaimTypes.Role,role?.RoleName??string.Empty)
-        //    };
-
-        //    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes
-        //                  (_configuration["JWT:SecreteKey"]??string.Empty));
-
-        //    var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        //    var token = new JwtSecurityToken(issuer: _configuration["JWT:Issuer"],
-        //                                     audience: _configuration["JWT:Audiance"],
-        //                                     claims: claim,
-        //                                     expires: DateTime.Now.AddDays(7),
-        //                                     signingCredentials: credentials);
-
-        //    var jwt = new JwtSecurityTokenHandler().WriteToken(token);
-
-        //    return new OkObjectResult(jwt);
-        //}
-        /// <summary>
-        /// Secure JWT token generation and validation service with structured logging
-        /// </summary>
-        private readonly IConfiguration _configuration;
         private readonly BookingContext _context;
         private readonly ILogger<JwtService> _logger;
-
-        public JwtService(IConfiguration configuration,BookingContext context,
-            ILogger<JwtService> logger)
+        private readonly JwtConfiguration _jwtConfiguration;
+        public JwtService(BookingContext context,
+            ILogger<JwtService> logger, IOptions<JwtConfiguration> jwtConfigurationOptions      )
         {
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _context = context ?? throw new ArgumentNullException(nameof(context));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
+            _logger = logger   ?? throw new ArgumentNullException(nameof(logger));
+            _jwtConfiguration  = jwtConfigurationOptions?.Value
+                               ?? throw new ArgumentNullException(nameof(jwtConfigurationOptions));
             ValidateConfiguration();
         }
 
         private void ValidateConfiguration()
         {
-            var secretKey = _configuration["JWT:SecretKey"];
+            var secretKey = _jwtConfiguration.SecretKey;
 
             if (string.IsNullOrWhiteSpace(secretKey))
             {
-                _logger.LogError($"JWT:SecretKey is not configured");
-                throw new InvalidOperationException("JWT:SecretKey is not configured. " +
+                _logger.LogError($"{secretKey} is not configured");
+                throw new InvalidOperationException($"{secretKey} is not configured. " +
                                                     "Add a strong key (min 32 chars) " +
                                                     "to appsettings.json or environment variables.");
             }
 
             var keyBytes = Encoding.UTF8.GetBytes(secretKey);
 
-            if (keyBytes.Length < int.Parse(_configuration["JWT:MinimumKeyLengthBytes"] ?? "32"))
+            if (keyBytes.Length < _jwtConfiguration.MinimumKeyLengthBytes)
             {
-                var requiredBytes = int.Parse(_configuration["JWT:MinimumKeyLengthBytes"] ?? "32");
+                var requiredBytes = _jwtConfiguration.MinimumKeyLengthBytes;
                 _logger.LogError($"JWT:SecretKey is too short. Required: {requiredBytes} bytes, " +
                                  $"Actual: {keyBytes.Length} bytes");
 
                 throw new InvalidOperationException(
-                                                    $"JWT:SecretKey must be at least " +
+                                                    $"{secretKey} must be at least " +
                                                     $"{requiredBytes} bytes (256 bits). " +
                                                     $"Current length: {keyBytes.Length} bytes. " +
                                                     "Generate a new key: openssl rand -base64 32");
             }
 
-            var issuer = _configuration["JWT:Issuer"];
-            var audience = _configuration["JWT:Audience"];
+            var issuer = _jwtConfiguration.Issuer;
+            var audience = _jwtConfiguration.Audience;
 
             if (string.IsNullOrWhiteSpace(issuer))
             {
-                _logger.LogWarning($"JWT:Issuer is not configured");
+                _logger.LogWarning($"{audience} is not configured");
             }
 
             if (string.IsNullOrWhiteSpace(audience))
             {
-                _logger.LogWarning($"JWT:Audience is not configured");
+                _logger.LogWarning($"{audience} is not configured");
             }
 
             _logger.LogInformation($"JWT configuration validated successfully. " +
@@ -141,9 +103,9 @@ namespace API_Dev_IT.Service
                 var key = GetSigningKey();
                 var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-                var issuer = _configuration["JWT:Issuer"] ?? "API_Dev_IT";
-                var audience = _configuration["JWT:Audience"] ?? "BookingClient";
-                var accessTokenExpiry = DateTime.UtcNow.AddHours(int.Parse(_configuration["JWT:AccessTokenExpiryHours"] ?? "2"));
+                var issuer = _jwtConfiguration.Issuer ?? "API_Dev_IT";
+                var audience = _jwtConfiguration.Audience ?? "BookingClient";
+                var accessTokenExpiry = DateTime.UtcNow.AddHours(_jwtConfiguration.AccessTokenExpiryHours);
 
                 var tokenDescriptor = new JwtSecurityToken(
                     issuer: issuer,
@@ -155,12 +117,11 @@ namespace API_Dev_IT.Service
 
                 var accessToken = new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
                 var refreshToken = GenerateRefreshToken();
-                var refreshTokenExpiry = DateTime.UtcNow.AddDays(int.Parse(_configuration["JWT:RefreshTokenExpiryDays"] ?? "7"));
+                var refreshTokenExpiry = DateTime.UtcNow.AddDays(_jwtConfiguration.RefreshTokenExpiryDays);
 
-                _logger.LogInformation("Token generated successfully for user {UserId}. " +
-                                       "TokenId: {TokenId}, Expires: {ExpiresAt}",user.UserID,
-                                       claims.First(c => c.Type == JwtRegisteredClaimNames.Jti).Value,
-                                       accessTokenExpiry);
+                _logger.LogInformation($"Token generated successfully for user {user.UserID}. " +
+                                       $"TokenId: {claims.First(c => c.Type == JwtRegisteredClaimNames.Jti).Value}" +
+                                       $", Expires: {accessTokenExpiry}");
 
                 return new AuthResponseDto
                 {
@@ -179,10 +140,8 @@ namespace API_Dev_IT.Service
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex,
-                    "Token generation failed for user {UserId}",
-                    user.UserID);
-                throw new InvalidOperationException("Authentication failed. Please try again.");
+                _logger.LogError(ex, $"Token generation failed for user {user.UserID}");
+                throw new InvalidOperationException($"Authentication failed. Please try again.");
             }
         }
 
@@ -190,18 +149,18 @@ namespace API_Dev_IT.Service
         {
             if (string.IsNullOrWhiteSpace(token))
             {
-                _logger.LogWarning("Token validation failed: token is null or empty");
+                _logger.LogWarning($"Token validation failed: token is null or empty");
                 return null;
             }
 
             try
             {
-                _logger.LogDebug("Validating JWT token");
+                _logger.LogDebug($"Validating JWT token");
 
                 var handler = new JwtSecurityTokenHandler();
                 var key = GetSigningKey();
-                var issuer = _configuration["JWT:Issuer"] ?? "API_Dev_IT";
-                var audience = _configuration["JWT:Audience"] ?? "BookingClient";
+                var issuer = _jwtConfiguration.Issuer ?? "API_Dev_IT";
+                var audience = _jwtConfiguration.Audience ?? "BookingClient";
 
                 var validationParameters = new TokenValidationParameters
                 {
@@ -217,27 +176,28 @@ namespace API_Dev_IT.Service
                     RequireSignedTokens = true
                 };
 
-                var principal = handler.ValidateToken(token, validationParameters, out var validatedToken);
+                var principal = handler.ValidateToken(token, 
+                                                      validationParameters, 
+                                                      out var validatedToken);
 
-                _logger.LogDebug(
-                    "Token validated successfully. TokenId: {TokenId}",
-                    principal.FindFirst(JwtRegisteredClaimNames.Jti)?.Value);
+                _logger.LogDebug($"Token validated successfully. " +
+                                 $"TokenId: {principal.FindFirst(JwtRegisteredClaimNames.Jti)?.Value}");
 
                 return principal;
             }
             catch (SecurityTokenExpiredException ex)
             {
-                _logger.LogWarning(ex, "JWT token has expired");
+                _logger.LogWarning(ex, $"JWT token has expired");
                 return null;
             }
             catch (SecurityTokenException ex)
             {
-                _logger.LogWarning(ex, "JWT token validation failed: invalid signature or format");
+                _logger.LogWarning(ex, $"JWT token validation failed: invalid signature or format");
                 return null;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error during JWT validation");
+                _logger.LogError(ex, $"Unexpected error during JWT validation");
                 return null;
             }
         }
@@ -252,7 +212,7 @@ namespace API_Dev_IT.Service
 
         private SymmetricSecurityKey GetSigningKey()
         {
-            var secretKey = _configuration["JWT:SecretKey"]!;
+            var secretKey = _jwtConfiguration.SecretKey!;
             return new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
         }
     }

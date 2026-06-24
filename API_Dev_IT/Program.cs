@@ -5,6 +5,7 @@ using API_Dev_IT.Model;
 using API_Dev_IT.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -30,6 +31,7 @@ builder.Services.AddScoped<ITenant, TenantService>();
 builder.Services.AddScoped<IPayment, PaymentService>();
 builder.Services.AddScoped<IBooking, BookingService>();
 builder.Services.AddScoped<UserRoleHelper>();
+builder.Services.Configure<JwtConfiguration>(builder.Configuration.GetSection("JWT"));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -42,12 +44,12 @@ builder.Services.AddSwaggerGen(options =>
     });
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Scheme = "Bearer",
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Name = "Authorization",
-        Description = "open api",
-        Type =  SecuritySchemeType.Http
+        Description = "Enter JWT token only"
     });
     options.AddSecurityRequirement(new OpenApiSecurityRequirement{
         {
@@ -85,6 +87,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
+
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey)),
             ValidateIssuer = true,
@@ -101,8 +104,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             OnAuthenticationFailed = context =>
             {
-                Log.Warning(context.Exception,
-                    $"JWT authentication failed for request {context.Request.Path}");
+                var auth = context.Request.Headers.Authorization.ToString();
+
+                Log.Warning(context.Exception, $"JWT authentication failed. Header: {auth}",
+                    auth);
+
                 return Task.CompletedTask;
             },
             OnTokenValidated = context =>
@@ -115,26 +121,23 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             {
                 Log.Warning($"JWT challenge issued for {context.Request.Path} - {context.Error}");
                 return Task.CompletedTask;
+            },
+            OnMessageReceived = context =>
+            {
+                var auth = context.Request.Headers.Authorization.ToString();
+
+                Log.Information($"Authorization Header: {auth}");
+
+                return Task.CompletedTask;
             }
         };
     });
 
-var projectRoot = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
-var contentRoot = builder.Environment.ContentRootPath;
-
 Log.Logger = new LoggerConfiguration()
-    .ReadFrom.Configuration(builder.Configuration as IConfiguration)
-    .WriteTo.File(
-        path: Path.Combine(contentRoot, "logs", "log-2026.txt"),
-        rollingInterval: RollingInterval.Day,
-        retainedFileCountLimit: 14)
-    .WriteTo.File(
-        path: Path.Combine(contentRoot, "logs", "errors-.txt"),
-        rollingInterval: RollingInterval.Day,
-        restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Error,
-        retainedFileCountLimit: 30)
+    .ReadFrom.Configuration(builder.Configuration)
     .CreateLogger();
 
+builder.Host.UseSerilog(Log.Logger);
 
 builder.Services.AddCors(
     option => option.AddPolicy("FrontEnd",
@@ -163,6 +166,10 @@ else
     app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
+
+app.UseSerilogRequestLogging();
+
+app.Lifetime.ApplicationStopped.Register(Log.CloseAndFlush);
 
 app.UseHttpsRedirection();
 
