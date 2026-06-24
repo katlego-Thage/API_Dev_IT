@@ -80,7 +80,6 @@ namespace API_Dev_IT.Service
                     _logger.LogError(ex, "An error occurred during login");
                     throw;
                 }
-
             }
 
             public async Task<T> Create<T>(User register)

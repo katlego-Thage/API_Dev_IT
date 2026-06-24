@@ -18,4 +18,13 @@ namespace API_Dev_IT.Model
         [Required]
         public string RefreshToken { get; set; } = string.Empty;
     }
+    public class JwtConfiguration
+    {
+        public string? SecretKey { get; set; }
+        public string? Issuer { get; set; }
+        public string? Audience { get; set; }
+        public int AccessTokenExpiryHours { get; set; }
+        public int RefreshTokenExpiryDays { get; set; }
+        public int MinimumKeyLengthBytes { get; set; }
+    }
 }
